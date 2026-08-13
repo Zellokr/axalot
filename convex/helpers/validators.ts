@@ -1,4 +1,5 @@
 import { literals } from 'convex-helpers/validators'
+import { v } from 'convex/values'
 
 // ===== Enums =====
 export enum Role {
@@ -60,3 +61,45 @@ export enum AuditSource {
   Agent = 'agent'
 }
 export const auditSourceValidator = literals(...Object.values(AuditSource))
+
+// ===== Document shapes (for query/mutation return validators) =====
+export const employeeValidator = v.object({
+  _id: v.id('employees'),
+  _creationTime: v.number(),
+  name: v.string(),
+  email: v.string(),
+  role: roleValidator,
+  level: levelValidator,
+  department: departmentValidator,
+  status: employeeStatusValidator
+})
+
+export const resourceValidator = v.object({
+  _id: v.id('resources'),
+  _creationTime: v.number(),
+  name: v.string(),
+  slug: v.string(),
+  type: resourceTypeValidator,
+  sensitive: v.boolean()
+})
+
+export const permissionValidator = v.object({
+  _id: v.id('permissions'),
+  _creationTime: v.number(),
+  employeeId: v.id('employees'),
+  resourceId: v.id('resources'),
+  accessLevel: accessLevelValidator,
+  grantedAt: v.number()
+})
+
+export const auditLogValidator = v.object({
+  _id: v.id('auditLogs'),
+  _creationTime: v.number(),
+  action: v.string(),
+  employeeId: v.optional(v.id('employees')),
+  resourceId: v.optional(v.id('resources')),
+  status: auditStatusValidator,
+  source: auditSourceValidator,
+  metadata: v.optional(v.any()),
+  createdAt: v.number()
+})

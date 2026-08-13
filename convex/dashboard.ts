@@ -1,28 +1,21 @@
+import { v } from 'convex/values'
 import { query } from './_generated/server'
+import { auditLogValidator } from './helpers/validators'
+import { getOverview } from './model/dashboard'
 
 export const overview = query({
   args: {},
+  returns: v.object({
+    stats: v.object({
+      employees: v.number(),
+      resources: v.number(),
+      permissions: v.number(),
+      auditEvents: v.number()
+    }),
+    recentActivity: v.array(auditLogValidator)
+  }),
 
   handler: async (ctx) => {
-    const [employees, resources, permissions, auditLogs] = await Promise.all([
-      ctx.db.query('employees').collect(),
-      ctx.db.query('resources').collect(),
-      ctx.db.query('permissions').collect(),
-      ctx.db
-        .query('auditLogs')
-        .withIndex('by_created_at')
-        .order('desc')
-        .collect()
-    ])
-
-    return {
-      stats: {
-        employees: employees.length,
-        resources: resources.length,
-        permissions: permissions.length,
-        auditEvents: auditLogs.length
-      },
-      recentActivity: auditLogs.slice(0, 5)
-    }
+    return await getOverview(ctx)
   }
 })

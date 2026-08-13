@@ -1,29 +1,17 @@
-import { ConvexError, v } from 'convex/values'
+import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
-import { AuditStatus, accessLevelValidator, auditSourceValidator } from './helpers/validators'
+import { accessLevelValidator, auditSourceValidator, employeeValidator, permissionValidator, resourceValidator } from './helpers/validators'
+import { grantAccess as grantAccessModel, listPermissions, revokeAccess as revokeAccessModel } from './model/permissions'
 
 export const list = query({
   args: {},
+  returns: v.array(permissionValidator.extend({
+    employee: v.union(v.null(), employeeValidator),
+    resource: v.union(v.null(), resourceValidator)
+  })),
 
   handler: async (ctx) => {
-    const permissions = await ctx.db
-      .query('permissions')
-      .collect()
-
-    return await Promise.all(
-      permissions.map(async (permission) => {
-        const [employee, resource] = await Promise.all([
-          ctx.db.get(permission.employeeId),
-          ctx.db.get(permission.resourceId)
-        ])
-
-        return {
-          ...permission,
-          employee,
-          resource
-        }
-      })
-    )
+    return await listPermissions(ctx)
   }
 })
 
@@ -34,57 +22,11 @@ export const grantAccess = mutation({
     accessLevel: accessLevelValidator,
     source: auditSourceValidator
   },
+  returns: v.null(),
 
   handler: async (ctx, args) => {
-    const employee = await ctx.db.get(args.employeeId)
-
-    if (!employee) {
-      throw new ConvexError('Employee not found')
-    }
-
-    const resource = await ctx.db.get(args.resourceId)
-
-    if (!resource) {
-      throw new ConvexError('Resource not found')
-    }
-
-    const existing = await ctx.db
-      .query('permissions')
-      .withIndex('by_employee_resource', q =>
-        q
-          .eq('employeeId', args.employeeId)
-          .eq('resourceId', args.resourceId)
-      )
-      .unique()
-
-    const grantedAt = Date.now()
-
-    if (existing) {
-      await ctx.db.patch(existing._id, {
-        accessLevel: args.accessLevel,
-        grantedAt
-      })
-    } else {
-      await ctx.db.insert('permissions', {
-        employeeId: args.employeeId,
-        resourceId: args.resourceId,
-        accessLevel: args.accessLevel,
-        grantedAt
-      })
-    }
-
-    await ctx.db.insert('auditLogs', {
-      action: `Granted ${args.accessLevel} access to ${resource.name}`,
-      employeeId: args.employeeId,
-      resourceId: args.resourceId,
-      status: AuditStatus.Success,
-      source: args.source,
-      metadata: {
-        accessLevel: args.accessLevel,
-        previousAccessLevel: existing?.accessLevel ?? null
-      },
-      createdAt: grantedAt
-    })
+    await grantAccessModel(ctx, args)
+    return null
   }
 })
 
@@ -94,39 +36,10 @@ export const revokeAccess = mutation({
     resourceId: v.id('resources'),
     source: auditSourceValidator
   },
+  returns: v.null(),
 
   handler: async (ctx, args) => {
-    const resource = await ctx.db.get(args.resourceId)
-
-    if (!resource) {
-      throw new ConvexError('Resource not found')
-    }
-
-    const existing = await ctx.db
-      .query('permissions')
-      .withIndex('by_employee_resource', q =>
-        q
-          .eq('employeeId', args.employeeId)
-          .eq('resourceId', args.resourceId)
-      )
-      .unique()
-
-    if (!existing) {
-      throw new ConvexError('This employee does not have access to this resource')
-    }
-
-    await ctx.db.delete(existing._id)
-
-    await ctx.db.insert('auditLogs', {
-      action: `Revoked ${existing.accessLevel} access to ${resource.name}`,
-      employeeId: args.employeeId,
-      resourceId: args.resourceId,
-      status: AuditStatus.Success,
-      source: args.source,
-      metadata: {
-        revokedAccessLevel: existing.accessLevel
-      },
-      createdAt: Date.now()
-    })
+    await revokeAccessModel(ctx, args)
+    return null
   }
 })

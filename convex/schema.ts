@@ -44,12 +44,11 @@ export default defineSchema({
 
     grantedAt: v.number()
   })
-    .index('by_employee', ['employeeId'])
     .index('by_resource', ['resourceId'])
     .index('by_employee_resource', [
       'employeeId',
       'resourceId'
-    ]),
+    ]), // 👈 by_employee_resource also serves employeeId-only lookups (prefix match)
 
   auditLogs: defineTable({
     action: v.string(),
@@ -71,6 +70,4 @@ export default defineSchema({
     createdAt: v.number()
   })
     .index('by_created_at', ['createdAt'])
-    .index('by_employee', ['employeeId']) // 👈 Permite ver "auditoría por empleado"
-    .index('by_resource', ['resourceId']) // 👈 Permite ver "auditoría por recurso"
 })

@@ -1,28 +1,16 @@
+import { v } from 'convex/values'
 import { query } from './_generated/server'
+import { auditLogValidator, employeeValidator, resourceValidator } from './helpers/validators'
+import { listAuditLogs } from './model/auditLogs'
 
 export const list = query({
   args: {},
+  returns: v.array(auditLogValidator.extend({
+    employee: v.union(v.null(), employeeValidator),
+    resource: v.union(v.null(), resourceValidator)
+  })),
 
   handler: async (ctx) => {
-    const logs = await ctx.db
-      .query('auditLogs')
-      .withIndex('by_created_at')
-      .order('desc')
-      .collect()
-
-    return await Promise.all(
-      logs.map(async (log) => {
-        const [employee, resource] = await Promise.all([
-          log.employeeId ? ctx.db.get(log.employeeId) : null,
-          log.resourceId ? ctx.db.get(log.resourceId) : null
-        ])
-
-        return {
-          ...log,
-          employee,
-          resource
-        }
-      })
-    )
+    return await listAuditLogs(ctx)
   }
 })
