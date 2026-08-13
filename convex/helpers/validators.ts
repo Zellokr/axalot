@@ -49,6 +49,33 @@ export enum AccessLevel {
 }
 export const accessLevelValidator = literals(...Object.values(AccessLevel))
 
+export enum AccessChangeType {
+  Grant = 'grant',
+  Upgrade = 'upgrade',
+  Downgrade = 'downgrade',
+  Unchanged = 'unchanged',
+  Revoke = 'revoke'
+}
+export const accessChangeTypeValidator = literals(...Object.values(AccessChangeType))
+
+export enum AccessOperation {
+  SetAccessLevel = 'set_access_level',
+  RevokeAccess = 'revoke_access'
+}
+export const accessOperationValidator = literals(...Object.values(AccessOperation))
+
+export enum PolicyEffect {
+  Allow = 'allow',
+  Deny = 'deny'
+}
+export const policyEffectValidator = literals(...Object.values(PolicyEffect))
+
+export enum PolicyStatus {
+  Active = 'active',
+  Superseded = 'superseded'
+}
+export const policyStatusValidator = literals(...Object.values(PolicyStatus))
+
 export enum AuditStatus {
   Success = 'success',
   Rejected = 'rejected',
@@ -61,6 +88,25 @@ export enum AuditSource {
   Agent = 'agent'
 }
 export const auditSourceValidator = literals(...Object.values(AuditSource))
+
+export enum ActionProposalStatus {
+  PendingConfirmation = 'pending_confirmation',
+  Executing = 'executing',
+  Completed = 'completed',
+  Cancelled = 'cancelled',
+  Expired = 'expired',
+  Invalidated = 'invalidated'
+}
+export const actionProposalStatusValidator = literals(...Object.values(ActionProposalStatus))
+
+export enum ApprovalStatus {
+  Pending = 'pending',
+  Approved = 'approved',
+  Rejected = 'rejected',
+  Expired = 'expired',
+  Stale = 'stale'
+}
+export const approvalStatusValidator = literals(...Object.values(ApprovalStatus))
 
 // ===== Document shapes (for query/mutation return validators) =====
 export const employeeValidator = v.object({
@@ -100,6 +146,9 @@ export const auditLogValidator = v.object({
   resourceId: v.optional(v.id('resources')),
   status: auditStatusValidator,
   source: auditSourceValidator,
+  actorId: v.optional(v.string()),
+  proposalId: v.optional(v.id('actionProposals')),
+  approvalId: v.optional(v.id('approvals')),
   metadata: v.optional(v.any()),
   createdAt: v.number()
 })

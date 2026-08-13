@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { api } from '#convex/api'
-import { AccessLevel, AuditSource } from '../../../convex/helpers/validators'
+import { AccessLevel } from '../../../convex/helpers/validators'
 
 const route = useRoute()
 const toast = useToast()
@@ -30,7 +30,7 @@ const ACCESS_LEVEL_ENUM: Record<AccessLevelKey, AccessLevel> = {
   admin: AccessLevel.Admin
 }
 
-const grantAccess = useConvexMutation(api.permissions.grantAccess)
+const setAccessLevel = useConvexMutation(api.permissions.setAccessLevel)
 const revokeAccess = useConvexMutation(api.permissions.revokeAccess)
 
 const revokeTarget = ref<PermissionRow | null>(null)
@@ -39,12 +39,38 @@ async function changeAccessLevel(permission: PermissionRow, accessLevel: AccessL
   if (!data.value) return
 
   try {
-    await grantAccess({
+    const result = await setAccessLevel({
       employeeId: permission.employeeId,
       resourceId: data.value.resource._id,
-      accessLevel: ACCESS_LEVEL_ENUM[accessLevel],
-      source: AuditSource.Admin
+      targetLevel: ACCESS_LEVEL_ENUM[accessLevel]
     })
+
+    if (result.status === 'policy_denied') {
+      toast.add({
+        title: 'Access change denied',
+        description: result.policy.reason,
+        color: 'error'
+      })
+      return
+    }
+
+    if (result.status === 'approval_required') {
+      toast.add({
+        title: 'Approval requested',
+        description: `No access has changed. The request for ${permission.employee?.name ?? 'this employee'} is awaiting human approval.`,
+        color: 'warning'
+      })
+      return
+    }
+
+    if (result.status === 'unchanged') {
+      toast.add({
+        title: 'No change needed',
+        description: `${permission.employee?.name ?? 'This employee'} already has "${accessLevel}" on ${data.value.resource.name}.`,
+        color: 'neutral'
+      })
+      return
+    }
 
     toast.add({
       title: 'Access level updated',
@@ -66,11 +92,28 @@ async function confirmRevoke() {
   const permission = revokeTarget.value
 
   try {
-    await revokeAccess({
+    const result = await revokeAccess({
       employeeId: permission.employeeId,
-      resourceId: data.value.resource._id,
-      source: AuditSource.Admin
+      resourceId: data.value.resource._id
     })
+
+    if (result.status === 'policy_denied') {
+      toast.add({
+        title: 'Revocation denied',
+        description: result.policy.reason,
+        color: 'error'
+      })
+      return
+    }
+
+    if (result.status === 'approval_required') {
+      toast.add({
+        title: 'Approval requested',
+        description: `No access has changed. The revocation for ${permission.employee?.name ?? 'this employee'} is awaiting human approval.`,
+        color: 'warning'
+      })
+      return
+    }
 
     toast.add({
       title: 'Access revoked',

@@ -1,4 +1,5 @@
 import { internalMutation } from './_generated/server'
+import { internal } from './_generated/api'
 import type { Id } from './_generated/dataModel'
 import {
   AccessLevel,
@@ -8,6 +9,8 @@ import {
   ResourceType,
   Role
 } from './helpers/validators'
+import { seedPermissionSnapshot } from './model/permissions'
+import { seedPolicyCatalog } from './model/policies'
 
 export const seed = internalMutation({
   args: {},
@@ -182,6 +185,8 @@ export const seed = internalMutation({
       { email: 'sofia@opspilot.dev', resource: 'production', accessLevel: AccessLevel.Write } // Ops
     ]
 
+    const policies = await seedPolicyCatalog(ctx)
+
     // Insertar Permisos (evitando duplicados)
     for (const permission of initialPermissions) {
       const employeeId = employeeIds.get(permission.email)
@@ -191,29 +196,20 @@ export const seed = internalMutation({
         continue
       }
 
-      const existing = await ctx.db
-        .query('permissions')
-        .withIndex('by_employee_resource', q =>
-          q
-            .eq('employeeId', employeeId)
-            .eq('resourceId', resourceId)
-        )
-        .unique()
-
-      if (!existing) {
-        await ctx.db.insert('permissions', {
-          employeeId,
-          resourceId,
-          accessLevel: permission.accessLevel,
-          grantedAt: Date.now()
-        })
-      }
+      await seedPermissionSnapshot(ctx, {
+        employeeId,
+        resourceId,
+        accessLevel: permission.accessLevel
+      })
     }
+
+    await ctx.scheduler.runAfter(0, internal.policies.syncRagCatalog, {})
 
     return {
       employees: employeeIds.size,
       resources: resourceIds.size,
-      permissions: initialPermissions.length
+      permissions: initialPermissions.length,
+      policies
     }
   }
 })
