@@ -2,8 +2,11 @@
 export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
-    '@nuxt/ui'
+    '@nuxt/ui',
+    'better-convex-nuxt'
   ],
+
+  ssr: false,
 
   devtools: {
     enabled: true
@@ -16,6 +19,20 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: '2026-06-30',
+
+  typescript: {
+    strict: true
+  },
+
+  convex: {
+    auth: {
+      enabled: false
+    },
+
+    defaults: {
+      auth: 'none'
+    }
+  },
 
   eslint: {
     config: {

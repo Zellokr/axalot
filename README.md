@@ -1,64 +1,131 @@
-# Nuxt Starter Template
+# OpsPilot
 
-[![Nuxt UI](https://img.shields.io/badge/Made%20with-Nuxt%20UI-00DC82?logo=nuxt&labelColor=020420)](https://ui.nuxt.com)
+Consola interna de gestión de accesos (IAM) con un agente de IA. Un administrador consulta o cambia permisos de empleados sobre recursos de la empresa, por interfaz o en lenguaje natural.
 
-Use this template to get started with [Nuxt UI](https://ui.nuxt.com) quickly.
+El LLM propone. El backend decide.
 
-- [Live demo](https://starter-template.nuxt.dev/)
-- [Documentation](https://ui.nuxt.com/docs/getting-started/installation/nuxt)
+## Qué hace
 
-<a href="https://starter-template.nuxt.dev/" target="_blank">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png">
-    <img alt="Nuxt Starter Template" src="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png" width="830" height="466">
-  </picture>
-</a>
+- Inventario de **empleados** y **recursos** (aplicaciones, entornos, infraestructura)
+- Permisos `read` / `write` / `admin`
+- **Approvals humanas** para recursos sensibles (Production)
+- Motor de políticas **determinista** en TypeScript (no en el prompt)
+- RAG de políticas para orientar al agente (advisory)
+- **Audit log** de grants, revokes, denegaciones y solicitudes
+- Chat persistente que usa las mismas mutations que la UI
 
-> The starter template for Vue is on https://github.com/nuxt-ui-templates/starter-vue.
+El agente nunca inventa IDs, nunca aprueba solicitudes y nunca salta la política del servidor.
 
-## Quick Start
+## Stack
 
-```bash [Terminal]
-npm create nuxt@latest -- -t ui
-```
+| Capa | Tecnología |
+|------|------------|
+| UI | Nuxt 4, Vue 3, Tailwind 4, `@nuxtjs/color-mode` |
+| Chat | `@ai-sdk/vue`, `@comark/nuxt` |
+| Backend | Convex (`queries`, `mutations`, `actions`, HTTP Actions) |
+| Bridge | `better-convex-nuxt` |
+| Auth | Better Auth + `@convex-dev/better-auth` |
+| Agente | `@convex-dev/agent`, Groq `openai/gpt-oss-20b` |
+| RAG | `@convex-dev/rag`, embeddings Gemini `gemini-embedding-001` |
+| Validación | Zod 4 |
 
-## Deploy your own
+Tipografía: stack de sistema de Tailwind (`ui-sans-serif` / `system-ui`). IDs y slugs en `font-mono`. Paleta: **Zinc** como marca; emerald / amber / red / blue solo para estado; violet como acento puntual.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-name=starter&repository-url=https%3A%2F%2Fgithub.com%2Fnuxt-ui-templates%2Fstarter&demo-image=https%3A%2F%2Fui.nuxt.com%2Fassets%2Ftemplates%2Fnuxt%2Fstarter-dark.png&demo-url=https%3A%2F%2Fstarter-template.nuxt.dev%2F&demo-title=Nuxt%20Starter%20Template&demo-description=A%20minimal%20template%20to%20get%20started%20with%20Nuxt%20UI.)
+## Requisitos
 
-## Setup
+- Node.js 22.12+, 24.11+ o 26+
+- pnpm
+- Cuenta en [Convex](https://www.convex.dev)
+- Claves de Groq y Google AI (agente y RAG)
 
-Make sure to install the dependencies:
+## Arranque local
 
 ```bash
 pnpm install
 ```
 
-## Development Server
-
-Start the development server on `http://localhost:3000`:
+Copia las variables a `.env.local` (no lo subas a git):
 
 ```bash
+NUXT_PUBLIC_CONVEX_URL=https://YOUR.convex.cloud
+NUXT_PUBLIC_CONVEX_SITE_URL=https://YOUR.convex.site
+CONVEX_URL=https://YOUR.convex.cloud
+CONVEX_SITE_URL=https://YOUR.convex.site
+```
+
+En dos terminales:
+
+```bash
+pnpm exec convex dev
 pnpm dev
 ```
 
-## Production
+La app queda en `http://localhost:3000`.
 
-Build the application for production:
+### Auth en Convex
 
-```bash
-pnpm build
-```
-
-Locally preview production build:
+`SITE_URL` es el origen de **Nuxt**, no `*.convex.site`.
 
 ```bash
-pnpm preview
+pnpm exec convex env set SITE_URL http://localhost:3000
+pnpm exec convex env set BETTER_AUTH_SECRET "$(openssl rand -base64 32)"
+pnpm exec convex env set GROQ_API_KEY "…"
+pnpm exec convex env set GOOGLE_GENERATIVE_AI_API_KEY "…"
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+`BETTER_AUTH_SECRET` necesita al menos 32 caracteres.
 
-## Renovate integration
+### Datos de ejemplo
 
-Install [Renovate GitHub app](https://github.com/apps/renovate/installations/select_target) on your repository and you are good to go.
+```bash
+pnpm exec convex run seed:seed
+pnpm exec convex run policyRag:seed
+```
+
+## Scripts
+
+| Comando | Qué hace |
+|---------|----------|
+| `pnpm dev` | Nuxt en local con `.env.local` |
+| `pnpm exec convex dev` | Backend Convex + codegen |
+| `pnpm build` | Build de producción |
+| `pnpm preview` | Sirve el build |
+
+Auth necesita un host con Nitro. No despliegues esto como sitio estático (`nuxt generate`).
+
+## Variables
+
+| Dónde | Variable | Uso |
+|-------|----------|-----|
+| Nuxt | `NUXT_PUBLIC_CONVEX_URL` / `CONVEX_URL` | Deployment `.convex.cloud` |
+| Nuxt | `NUXT_PUBLIC_CONVEX_SITE_URL` / `CONVEX_SITE_URL` | HTTP Actions `.convex.site` |
+| Convex | `SITE_URL` | Origen exacto de la app (`http://localhost:3000`) |
+| Convex | `BETTER_AUTH_SECRET` | Firma de sesión |
+| Convex | `GROQ_API_KEY` | Modelo del agente |
+| Convex | `GOOGLE_GENERATIVE_AI_API_KEY` | Embeddings RAG |
+
+## Cómo está organizado
+
+```text
+app/          UI Nuxt (pages, layout, componentes)
+convex/       Schema, auth, IAM, agente, RAG, HTTP
+docs/         Guía de réplica desde cero
+```
+
+Páginas: Overview, Agent, Employees, Resources, Policies, Approvals, Audit, Auth.
+
+## Flujo de un grant
+
+```text
+UI o chat
+  → (agente) findEmployee / findResource / getEmployeeAccess / searchPolicies
+  → permissions.grantAccess
+       → ¿empleado activo?
+       → evaluateGrantPolicy          # siempre, determinista
+            no  → policy_denied + audit
+            sí + sensitive → approval (el permiso NO cambia)
+            sí + no sensitive → escribe permissions + audit
+```
+
+RAG puede aconsejar al modelo. Si el modelo se equivoca, el motor en `convex/accessPolicy.ts` sigue bloqueando.
+
