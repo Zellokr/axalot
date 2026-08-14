@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { api } from '#convex/api'
 
+const { t, locale } = useI18n()
+const dateLocale = computed(() => locale.value === 'es' ? 'es-ES' : 'en-US')
 const { data: logs, status, error } = await useConvexQuery(api.auditLogs.list, {})
 
 type AuditLogRow = NonNullable<typeof logs.value>[number]
@@ -73,10 +75,10 @@ const COLOR_CLASSES: Record<EventColor, { iconBg: string, iconText: string, rowB
   neutral: { iconBg: 'bg-elevated', iconText: 'text-dimmed', rowBorder: 'border-l-2 border-l-default' }
 }
 
-const STATUS_BADGE: Record<string, { label: string, color: 'success' | 'error' | 'warning' }> = {
-  success: { label: 'Success', color: 'success' },
-  rejected: { label: 'Rejected', color: 'error' },
-  pending: { label: 'Pending', color: 'warning' }
+const STATUS_BADGE: Record<string, { color: 'success' | 'error' | 'warning' }> = {
+  success: { color: 'success' },
+  rejected: { color: 'error' },
+  pending: { color: 'warning' }
 }
 
 function inferColorFromAction(action: string): EventColor {
@@ -101,9 +103,23 @@ function eventVisual(log: AuditLogRow) {
     : isLegacyRevoke
       ? 'i-lucide-x'
       : (EVENT_ICONS[log.action] ?? 'i-lucide-circle-dot')
-  const statusBadge = STATUS_BADGE[log.status] ?? { label: toLabel(log.status), color: 'warning' as const }
+  const statusBadge = STATUS_BADGE[log.status] ?? { color: 'warning' as const }
+  const actionKey = AUDIT_ACTION_KEYS[log.action]
+  const title = actionKey ? t(actionKey) : toAuditActionLabel(log.action)
+  const statusLabel = ['success', 'rejected', 'pending'].includes(log.status)
+    ? t(`audit.status.${log.status}`)
+    : toLabel(log.status)
 
-  return { ...COLOR_CLASSES[color], title: toAuditActionLabel(log.action), icon, statusBadge }
+  return { ...COLOR_CLASSES[color], title, icon, statusBadge: { ...statusBadge, label: statusLabel } }
+}
+
+function accessLevelLabel(value: unknown) {
+  const level = String(value)
+  return ['read', 'write', 'admin'].includes(level) ? t(`common.accessLevel.${level}`) : level
+}
+
+function sourceLabel(source: string) {
+  return ['admin', 'agent', 'system'].includes(source) ? t(`audit.source.${source}`) : toLabel(source)
 }
 
 function accessDisplay(log: AuditLogRow): string {
@@ -111,9 +127,9 @@ function accessDisplay(log: AuditLogRow): string {
   const from = metadata.fromLevel ?? metadata.previousAccessLevel ?? metadata.currentLevel
   const to = metadata.targetLevel ?? metadata.accessLevel ?? metadata.revokedAccessLevel
 
-  if (from && to && from !== to) return `${from} → ${to}`
-  if (to) return String(to)
-  if (from) return String(from)
+  if (from && to && from !== to) return `${accessLevelLabel(from)} → ${accessLevelLabel(to)}`
+  if (to) return accessLevelLabel(to)
+  if (from) return accessLevelLabel(from)
   return '—'
 }
 </script>
@@ -122,7 +138,7 @@ function accessDisplay(log: AuditLogRow): string {
   <UDashboardPanel id="audit-log">
     <template #header>
       <UDashboardNavbar
-        title="Audit Log"
+        :title="t('audit.title')"
         :ui="{ root: 'border-b-0' }"
       >
         <template #leading>
@@ -132,7 +148,7 @@ function accessDisplay(log: AuditLogRow): string {
 
       <div class="border-b border-default px-4 pb-3 sm:px-6">
         <p class="text-sm text-muted">
-          Every action recorded by administrators and the AI agent.
+          {{ t('audit.description') }}
         </p>
       </div>
     </template>
@@ -142,7 +158,7 @@ function accessDisplay(log: AuditLogRow): string {
         v-if="status === 'pending'"
         class="text-sm text-muted"
       >
-        Loading audit log...
+        {{ t('audit.loading') }}
       </p>
 
       <UAlert
@@ -158,13 +174,13 @@ function accessDisplay(log: AuditLogRow): string {
           :columns="[
             {
               accessorKey: 'action',
-              header: 'Action',
+              header: t('audit.table.action'),
               meta: { class: { td: (cell) => eventVisual(cell.row.original).rowBorder } }
             },
-            { id: 'employee', header: 'Employee' },
-            { id: 'resource', header: 'Resource' },
-            { id: 'access', header: 'Access' },
-            { accessorKey: 'createdAt', header: 'Date' }
+            { id: 'employee', header: t('common.table.employee') },
+            { id: 'resource', header: t('common.table.resource') },
+            { id: 'access', header: t('audit.table.access') },
+            { accessorKey: 'createdAt', header: t('audit.table.date') }
           ]"
           :ui="{
             base: 'table-fixed border-separate border-spacing-0',
@@ -202,7 +218,7 @@ function accessDisplay(log: AuditLogRow): string {
                   <UBadge
                     color="neutral"
                     variant="subtle"
-                    :label="toLabel(row.original.source)"
+                    :label="sourceLabel(row.original.source)"
                   />
                 </div>
               </div>
@@ -230,7 +246,7 @@ function accessDisplay(log: AuditLogRow): string {
           </template>
 
           <template #createdAt-cell="{ row }">
-            <span class="text-sm text-muted">{{ formatDateTime(row.original.createdAt) }}</span>
+            <span class="text-sm text-muted">{{ formatDateTime(row.original.createdAt, dateLocale) }}</span>
           </template>
         </UTable>
 
@@ -246,10 +262,10 @@ function accessDisplay(log: AuditLogRow): string {
           </div>
 
           <p class="text-sm font-medium text-highlighted">
-            No activity yet
+            {{ t('audit.empty') }}
           </p>
           <p class="mt-1 text-sm text-dimmed">
-            Actions performed by administrators and the AI agent will appear here.
+            {{ t('audit.emptyDescription') }}
           </p>
         </div>
       </template>

@@ -1,5 +1,7 @@
 import type { UIMessage } from 'ai'
 
+export const TOOL_INCOMPLETE_ERROR_KEY = 'agent.errors.toolIncomplete'
+
 export interface AgentMessageRecord {
   _id: string
   order: number
@@ -10,34 +12,35 @@ export interface AgentMessageRecord {
   message?: { role?: string, content?: unknown }
 }
 
-export const TOOL_LABELS: Record<string, string> = {
-  findEmployee: 'Finding employee',
-  listEmployees: 'Listing employees',
-  findResource: 'Finding resource',
-  getEmployeeAccess: 'Reviewing current access',
-  searchPolicies: 'Consulting policy catalog',
-  listPolicies: 'Reviewing policy catalog',
-  setPolicyStatus: 'Updating policy status',
-  setAccessLevel: 'Applying access level',
-  revokeAccess: 'Revoking access',
-  createActionProposal: 'Preparing confirmation',
-  executeActionProposal: 'Executing confirmed change',
-  cancelActionProposal: 'Cancelling proposed change'
+export const TOOL_LABEL_KEYS: Record<string, string> = {
+  findEmployee: 'agent.tools.findEmployee',
+  listEmployees: 'agent.tools.listEmployees',
+  findResource: 'agent.tools.findResource',
+  getEmployeeAccess: 'agent.tools.getEmployeeAccess',
+  getApprovalStatus: 'agent.tools.getApprovalStatus',
+  searchPolicies: 'agent.tools.searchPolicies',
+  listPolicies: 'agent.tools.listPolicies',
+  setPolicyStatus: 'agent.tools.setPolicyStatus',
+  setAccessLevel: 'agent.tools.setAccessLevel',
+  revokeAccess: 'agent.tools.revokeAccess',
+  createActionProposal: 'agent.tools.createActionProposal',
+  executeActionProposal: 'agent.tools.executeActionProposal',
+  cancelActionProposal: 'agent.tools.cancelActionProposal'
 }
 
-export function toolStateLabel(state: string): string {
+export function toolStateLabelKey(state: string): string {
   switch (state) {
     case 'input-streaming':
     case 'input-available':
-      return 'Working…'
+      return 'agent.toolStates.working'
     case 'output-error':
-      return 'Action failed'
+      return 'agent.toolStates.failed'
     case 'output-denied':
-      return 'Denied'
+      return 'agent.toolStates.denied'
     case 'approval-requested':
-      return 'Awaiting approval'
+      return 'agent.toolStates.awaitingApproval'
     default:
-      return 'Completed'
+      return 'agent.toolStates.completed'
   }
 }
 
@@ -123,7 +126,7 @@ export function buildInitialMessages(records: readonly AgentMessageRecord[]): UI
               toolCallId: part.toolCallId,
               state: 'output-error',
               input: part.input ?? part.args,
-              errorText: record.error ?? 'Tool call did not complete'
+              errorText: record.error ?? TOOL_INCOMPLETE_ERROR_KEY
             }
           : {
               type: 'dynamic-tool',
@@ -155,4 +158,25 @@ export function buildInitialMessages(records: readonly AgentMessageRecord[]): UI
 
 export function canSendAgentPrompt(prompt: string, pending: boolean): boolean {
   return prompt.trim().length > 0 && !pending
+}
+
+/**
+ * The /agent-chat action replies with a small JSON payload on failure
+ * (see convex/http.ts#describeAgentError) instead of a raw error message,
+ * so the UI can explain *why* the request failed instead of showing
+ * internal AI SDK stack traces.
+ */
+export function describeAgentChatError(message: string | undefined): { key: string, params?: Record<string, number> } {
+  if (message) {
+    try {
+      const payload = JSON.parse(message) as { code?: string, retryMinutes?: number }
+      if (payload.code === 'rate_limit' && typeof payload.retryMinutes === 'number') {
+        return { key: 'agent.errors.rateLimit', params: { minutes: payload.retryMinutes } }
+      }
+    } catch {
+      // Not a structured payload (e.g. a network failure) — use the generic message.
+    }
+  }
+
+  return { key: 'agent.messageNotSentDescription' }
 }

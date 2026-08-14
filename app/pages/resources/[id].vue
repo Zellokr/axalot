@@ -4,6 +4,8 @@ import { AccessLevel } from '../../../convex/helpers/validators'
 
 const route = useRoute()
 const toast = useToast()
+const { t, locale } = useI18n()
+const dateLocale = computed(() => locale.value === 'es' ? 'es-ES' : 'en-US')
 
 const { data, status, error } = await useConvexQuery(api.resources.getDetails, {
   resourceId: route.params.id as string
@@ -35,6 +37,15 @@ const revokeAccess = useConvexMutation(api.permissions.revokeAccess)
 
 const revokeTarget = ref<PermissionRow | null>(null)
 
+function accessLevelLabel(level: AccessLevelKey) {
+  return t(`common.accessLevel.${level}`)
+}
+
+function employeeName(permission: PermissionRow, sentence = false) {
+  return permission.employee?.name
+    ?? t(sentence ? 'resources.detail.fallbackEmployeeSentence' : 'resources.detail.fallbackEmployee')
+}
+
 async function changeAccessLevel(permission: PermissionRow, accessLevel: AccessLevelKey) {
   if (!data.value) return
 
@@ -47,7 +58,7 @@ async function changeAccessLevel(permission: PermissionRow, accessLevel: AccessL
 
     if (result.status === 'policy_denied') {
       toast.add({
-        title: 'Access change denied',
+        title: t('resources.detail.denied'),
         description: result.policy.reason,
         color: 'error'
       })
@@ -56,8 +67,8 @@ async function changeAccessLevel(permission: PermissionRow, accessLevel: AccessL
 
     if (result.status === 'approval_required') {
       toast.add({
-        title: 'Approval requested',
-        description: `No access has changed. The request for ${permission.employee?.name ?? 'this employee'} is awaiting human approval.`,
+        title: t('resources.detail.approvalRequested'),
+        description: t('resources.detail.approvalRequestedDescription', { name: employeeName(permission) }),
         color: 'warning'
       })
       return
@@ -65,21 +76,29 @@ async function changeAccessLevel(permission: PermissionRow, accessLevel: AccessL
 
     if (result.status === 'unchanged') {
       toast.add({
-        title: 'No change needed',
-        description: `${permission.employee?.name ?? 'This employee'} already has "${accessLevel}" on ${data.value.resource.name}.`,
+        title: t('resources.detail.noChange'),
+        description: t('resources.detail.noChangeDescription', {
+          name: employeeName(permission, true),
+          level: accessLevelLabel(accessLevel),
+          resource: data.value.resource.name
+        }),
         color: 'neutral'
       })
       return
     }
 
     toast.add({
-      title: 'Access level updated',
-      description: `${permission.employee?.name ?? 'This employee'} is now "${accessLevel}" on ${data.value.resource.name}.`,
+      title: t('resources.detail.accessLevelUpdated'),
+      description: t('resources.detail.updatedDescription', {
+        name: employeeName(permission, true),
+        level: accessLevelLabel(accessLevel),
+        resource: data.value.resource.name
+      }),
       color: 'success'
     })
   } catch (err) {
     toast.add({
-      title: 'Could not update access',
+      title: t('resources.detail.couldNotUpdate'),
       description: (err as Error).message,
       color: 'error'
     })
@@ -99,7 +118,7 @@ async function confirmRevoke() {
 
     if (result.status === 'policy_denied') {
       toast.add({
-        title: 'Revocation denied',
+        title: t('resources.detail.revocationDenied'),
         description: result.policy.reason,
         color: 'error'
       })
@@ -108,21 +127,24 @@ async function confirmRevoke() {
 
     if (result.status === 'approval_required') {
       toast.add({
-        title: 'Approval requested',
-        description: `No access has changed. The revocation for ${permission.employee?.name ?? 'this employee'} is awaiting human approval.`,
+        title: t('resources.detail.approvalRequested'),
+        description: t('resources.detail.revokeApprovalDescription', { name: employeeName(permission) }),
         color: 'warning'
       })
       return
     }
 
     toast.add({
-      title: 'Access revoked',
-      description: `${permission.employee?.name ?? 'This employee'} no longer has access to ${data.value.resource.name}.`,
+      title: t('resources.detail.revoked'),
+      description: t('resources.detail.revokedDescription', {
+        name: employeeName(permission, true),
+        resource: data.value.resource.name
+      }),
       color: 'success'
     })
   } catch (err) {
     toast.add({
-      title: 'Could not revoke access',
+      title: t('resources.detail.couldNotRevoke'),
       description: (err as Error).message,
       color: 'error'
     })
@@ -134,12 +156,12 @@ async function confirmRevoke() {
 function getRowActions(permission: PermissionRow) {
   return [
     ACCESS_LEVELS.filter(level => level !== permission.accessLevel).map(level => ({
-      label: `Set to ${toLabel(level)}`,
+      label: t('resources.detail.setTo', { level: accessLevelLabel(level) }),
       icon: 'i-lucide-shield',
       onSelect: () => changeAccessLevel(permission, level)
     })),
     [{
-      label: 'Revoke access',
+      label: t('resources.detail.revokeAccess'),
       icon: 'i-lucide-trash',
       color: 'error' as const,
       onSelect: () => {
@@ -153,7 +175,7 @@ function getRowActions(permission: PermissionRow) {
 <template>
   <UDashboardPanel id="resource-detail">
     <template #header>
-      <UDashboardNavbar :title="data?.resource.name ?? 'Resource'">
+      <UDashboardNavbar :title="data?.resource.name ?? t('resources.detail.fallbackName')">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
@@ -161,7 +183,7 @@ function getRowActions(permission: PermissionRow) {
         <template #right>
           <UButton
             icon="i-lucide-arrow-left"
-            label="Back"
+            :label="t('common.actions.back')"
             color="neutral"
             variant="ghost"
             to="/resources"
@@ -182,7 +204,7 @@ function getRowActions(permission: PermissionRow) {
         v-else-if="status === 'success' && !data"
         class="py-12 text-center text-muted"
       >
-        Resource not found.
+        {{ t('resources.detail.notFound') }}
       </div>
 
       <template v-else-if="data">
@@ -203,7 +225,7 @@ function getRowActions(permission: PermissionRow) {
                   </h2>
 
                   <p class="mt-1 text-sm text-muted">
-                    {{ data.resource.slug }} · {{ toLabel(data.resource.type) }}
+                    {{ data.resource.slug }} · {{ t(`common.resourceType.${data.resource.type}`) }}
                   </p>
                 </div>
 
@@ -214,14 +236,14 @@ function getRowActions(permission: PermissionRow) {
                   class="gap-1.5"
                 >
                   <span class="size-1.5 rounded-full bg-warning" />
-                  Sensitive
+                  {{ t('common.resourceSensitivity.sensitive') }}
                 </UBadge>
 
                 <UBadge
                   v-else
                   color="neutral"
                   variant="subtle"
-                  label="Standard"
+                  :label="t('common.resourceSensitivity.standard')"
                 />
               </div>
             </div>
@@ -230,7 +252,7 @@ function getRowActions(permission: PermissionRow) {
 
         <div class="mt-6">
           <h2 class="mb-3 text-sm font-medium text-highlighted">
-            Permissions
+            {{ t('permissions.title') }}
           </h2>
 
           <UCard
@@ -246,10 +268,10 @@ function getRowActions(permission: PermissionRow) {
               </div>
 
               <p class="text-sm font-medium text-highlighted">
-                No permissions yet
+                {{ t('resources.detail.noPermissions') }}
               </p>
               <p class="mt-1 text-sm text-dimmed">
-                No employee has been granted access to this resource yet.
+                {{ t('resources.detail.noPermissionsDescription') }}
               </p>
             </div>
           </UCard>
@@ -258,16 +280,16 @@ function getRowActions(permission: PermissionRow) {
             v-else
             :data="data.permissions"
             :columns="[
-              { accessorKey: 'employee', header: 'Employee' },
-              { accessorKey: 'accessLevel', header: 'Access level' },
-              { accessorKey: 'grantedAt', header: 'Granted at' },
+              { accessorKey: 'employee', header: t('common.table.employee') },
+              { accessorKey: 'accessLevel', header: t('common.table.accessLevel') },
+              { accessorKey: 'grantedAt', header: t('common.table.grantedAt') },
               { id: 'actions' }
             ]"
           >
             <template #employee-cell="{ row }">
               <div>
                 <p class="font-medium text-highlighted">
-                  {{ row.original.employee?.name ?? 'Unknown employee' }}
+                  {{ row.original.employee?.name ?? t('common.unknown.employee') }}
                 </p>
                 <p
                   v-if="row.original.employee"
@@ -282,12 +304,12 @@ function getRowActions(permission: PermissionRow) {
               <UBadge
                 color="neutral"
                 :variant="accessLevelVariant[row.original.accessLevel]"
-                :label="toLabel(row.original.accessLevel)"
+                :label="accessLevelLabel(row.original.accessLevel)"
               />
             </template>
 
             <template #grantedAt-cell="{ row }">
-              {{ formatDateTime(row.original.grantedAt) }}
+              {{ formatDateTime(row.original.grantedAt, dateLocale) }}
             </template>
 
             <template #actions-cell="{ row }">
@@ -300,6 +322,7 @@ function getRowActions(permission: PermissionRow) {
                     icon="i-lucide-ellipsis-vertical"
                     color="neutral"
                     variant="ghost"
+                    :aria-label="t('common.aria.accessActions')"
                   />
                 </UDropdownMenu>
               </div>
@@ -309,20 +332,20 @@ function getRowActions(permission: PermissionRow) {
 
         <UModal
           :open="!!revokeTarget"
-          title="Revoke access"
-          :description="`Are you sure you want to revoke ${data.resource.name} access for ${revokeTarget?.employee?.name ?? 'this employee'}? This action cannot be undone.`"
+          :title="t('resources.detail.revokeAccess')"
+          :description="t('resources.detail.revokeDescription', { resource: data.resource.name, name: revokeTarget ? employeeName(revokeTarget) : t('resources.detail.fallbackEmployee') })"
           :ui="{ footer: 'justify-end' }"
           @update:open="(value) => { if (!value) revokeTarget = null }"
         >
           <template #footer>
             <UButton
-              label="Cancel"
+              :label="t('common.actions.cancel')"
               color="neutral"
               variant="outline"
               @click="revokeTarget = null"
             />
             <UButton
-              label="Revoke"
+              :label="t('common.actions.revoke')"
               color="error"
               :loading="revokeAccess.pending.value"
               @click="confirmRevoke"

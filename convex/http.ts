@@ -3,6 +3,7 @@ import { httpAction } from './_generated/server'
 import { internal } from './_generated/api'
 import { axalotAgent } from './axalotAgent'
 import { DEMO_ADMIN_ID } from './domain/identity'
+import { createGroqModel } from './domain/groqModel'
 
 const http = httpRouter()
 
@@ -34,6 +35,8 @@ function lastUserMessageText(messages: unknown): string {
   return text
 }
 
+type AgentErrorPayload = { code: 'rate_limit', retryMinutes: number } | { code: 'unknown' }
+
 http.route({
   path: '/agent-chat',
   method: 'OPTIONS',
@@ -44,6 +47,11 @@ http.route({
   path: '/agent-chat',
   method: 'POST',
   handler: httpAction(async (ctx, request) => {
+    let retryAfterSeconds: number | undefined
+    const model = createGroqModel((seconds) => {
+      retryAfterSeconds = seconds
+    })
+
     try {
       const body = await request.json()
       const prompt = lastUserMessageText(body.messages)
@@ -53,11 +61,14 @@ http.route({
         threadId: conversation.threadId,
         userId: DEMO_ADMIN_ID
       })
-      const result = await thread.streamText({ prompt }, { saveStreamDeltas: true })
+      const result = await thread.streamText({ prompt, model }, { saveStreamDeltas: true })
 
       return result.toUIMessageStreamResponse({ headers: corsHeaders(request) })
-    } catch (err) {
-      return new Response((err as Error).message, { status: 500, headers: corsHeaders(request) })
+    } catch {
+      const payload: AgentErrorPayload = retryAfterSeconds
+        ? { code: 'rate_limit', retryMinutes: Math.max(1, Math.ceil(retryAfterSeconds / 60)) }
+        : { code: 'unknown' }
+      return new Response(JSON.stringify(payload), { status: 500, headers: corsHeaders(request) })
     }
   })
 })

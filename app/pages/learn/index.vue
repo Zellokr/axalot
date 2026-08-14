@@ -1,109 +1,123 @@
 <script setup lang="ts">
-const CONCEPTS = [
+const { t } = useI18n()
+
+const CONCEPTS = computed(() => [
   {
     icon: 'i-lucide-shield-check',
-    title: 'A deterministic Policy Engine decides',
-    description: 'Every access change — from the UI or from the AI agent — goes through the same TypeScript rule engine. The agent can propose a change; it can never apply one the policy catalog doesn\'t allow.'
+    title: t('learn.concepts.policy.title'),
+    description: t('learn.concepts.policy.description')
   },
   {
     icon: 'i-lucide-user-check',
-    title: 'Sensitive resources need a human',
-    description: 'Resources marked sensitive (like Production) can\'t be granted directly, even by the agent. The request becomes an approval instead, and no permission changes until an admin decides.'
+    title: t('learn.concepts.sensitive.title'),
+    description: t('learn.concepts.sensitive.description')
   },
   {
     icon: 'i-lucide-history',
-    title: 'Everything is audited',
-    description: 'Grants, revokes, denials, policy toggles, and agent actions all write to the same audit trail — so you can always see who, or what, did something, and why.'
+    title: t('learn.concepts.audit.title'),
+    description: t('learn.concepts.audit.description')
   }
-] as const
+])
 
-const FEATURES = [
+const FEATURES = computed(() => [
   {
     to: '/',
     icon: 'i-lucide-layout-dashboard',
-    title: 'Overview',
-    description: 'Live counts and a feed of the most recent actions across the whole system.'
+    title: t('navigation.overview'),
+    description: t('learn.features.overview')
   },
   {
     to: '/employees',
     icon: 'i-lucide-users',
-    title: 'Employees',
-    description: 'Browse the team and open any employee to see, and change, their access to every company resource.'
+    title: t('navigation.employees'),
+    description: t('learn.features.employees')
   },
   {
     to: '/agent',
     icon: 'i-lucide-bot',
-    title: 'Agent',
-    description: 'Ask in plain language — "What access does María have to GitHub?" or "Give Pedro read access to Jira." Responses stream in real time, with every tool call shown as it happens.'
+    title: t('navigation.agent'),
+    description: t('learn.features.agent')
   },
   {
     to: '/resources',
     icon: 'i-lucide-server',
-    title: 'Resources',
-    description: 'The applications, environments, and infrastructure access can be granted to, including which ones are marked sensitive.'
+    title: t('navigation.resources'),
+    description: t('learn.features.resources')
   },
   {
     to: '/permissions',
     icon: 'i-lucide-shield-check',
-    title: 'Permissions',
-    description: 'Every active grant across the organization, in one sortable table.'
+    title: t('navigation.permissions'),
+    description: t('learn.features.permissions')
+  },
+  {
+    to: '/approvals',
+    icon: 'i-lucide-clipboard-check',
+    title: t('navigation.approvals'),
+    description: t('learn.features.approvals')
   },
   {
     to: '/policies',
     icon: 'i-lucide-gavel',
-    title: 'Policies',
-    description: 'The actual rule catalog the Policy Engine enforces. Deactivate a rule and watch what the agent and the UI are allowed to do change immediately.'
+    title: t('navigation.policies'),
+    description: t('learn.features.policies')
   },
   {
     to: '/audit-log',
     icon: 'i-lucide-history',
-    title: 'Audit Log',
-    description: 'The full trail — what was requested, whether it was granted, denied, or sent for approval, and whether an admin or the agent did it.'
+    title: t('navigation.auditLog'),
+    description: t('learn.features.audit')
   }
-] as const
+])
 
-const TRY_IT = [
+const TRY_IT = computed(() => [
   {
     to: '/agent',
     icon: 'i-lucide-message-circle-question',
-    title: 'Ask the agent a question',
-    description: '"What access does María have to GitHub?" — watch it look up the employee and the resource, then answer.'
+    title: t('learn.tryIt.ask.title'),
+    description: t('learn.tryIt.ask.description')
   },
   {
     to: '/agent',
     icon: 'i-lucide-shield-plus',
-    title: 'Request a real change',
-    description: '"Give Pedro read access to Jira." A real grant happens, if the policy catalog allows it.'
+    title: t('learn.tryIt.request.title'),
+    description: t('learn.tryIt.request.description')
+  },
+  {
+    to: '/approvals',
+    icon: 'i-lucide-clipboard-check',
+    title: t('learn.tryIt.decide.title'),
+    description: t('learn.tryIt.decide.description')
   },
   {
     to: '/policies',
     icon: 'i-lucide-toggle-left',
-    title: 'Toggle a policy off',
-    description: 'Deactivate the rule that allowed the request above, then ask again — the outcome changes immediately.'
+    title: t('learn.tryIt.policy.title'),
+    description: t('learn.tryIt.policy.description')
   },
   {
     to: '/audit-log',
     icon: 'i-lucide-list-checks',
-    title: 'Check the trail',
-    description: 'Everything above is already there, in order, with who did it and why.'
+    title: t('learn.tryIt.audit.title'),
+    description: t('learn.tryIt.audit.description')
   }
-] as const
+])
 
-const TECH_STACK = [
-  { label: 'Nuxt 4 + Vue 3 + Nuxt UI', detail: 'Frontend and dashboard layout' },
-  { label: 'Convex', detail: 'Database, queries, mutations, and HTTP Actions — no separate backend server' },
-  { label: '@convex-dev/agent + Groq', detail: 'The agent\'s tool-calling loop and language model' },
-  { label: 'Vercel AI SDK (ai + @ai-sdk/vue)', detail: 'Real token-by-token streaming from the agent to the browser' },
-  { label: '@convex-dev/rag + Google embeddings', detail: 'Advisory policy search the agent can cite — never authoritative' },
-  { label: 'TypeScript, strict mode', detail: 'End to end, including the policy engine itself' }
-] as const
+const TECH_STACK = computed(() => [
+  { label: 'Nuxt 4 + Vue 3 + Nuxt UI', detail: t('learn.tech.frontend') },
+  { label: 'Convex', detail: t('learn.tech.convex') },
+  { label: '@convex-dev/agent + Groq', detail: t('learn.tech.agent') },
+  { label: 'Vercel AI SDK (ai + @ai-sdk/vue)', detail: t('learn.tech.streaming') },
+  { label: '@convex-dev/rag + Google embeddings', detail: t('learn.tech.rag') },
+  { label: t('learn.tech.typescriptLabel'), detail: t('learn.tech.typescript') }
+])
 </script>
 
 <template>
   <UDashboardPanel id="learn">
     <template #header>
       <UDashboardNavbar
-        title="Learn"
+        :title="t('learn.title')"
         :ui="{ root: 'border-b-0' }"
       >
         <template #leading>
@@ -113,7 +127,7 @@ const TECH_STACK = [
 
       <div class="border-b border-default px-4 pb-4 sm:px-6">
         <p class="text-sm text-muted">
-          What this demo is, how it's built, and how to try it yourself.
+          {{ t('learn.description') }}
         </p>
       </div>
     </template>
@@ -125,16 +139,13 @@ const TECH_STACK = [
             Axalot
           </h1>
           <p class="mt-2 text-sm leading-6 text-muted">
-            Axalot is an internal IAM (identity and access management) console. An administrator
-            reviews or changes what employees can access — through the UI or by talking to an AI
-            agent in plain language. The agent can look things up and propose changes, but a
-            deterministic backend decides what's actually allowed.
+            {{ t('learn.intro') }}
           </p>
         </section>
 
         <section>
           <h2 class="text-sm font-semibold text-highlighted">
-            How access control works here
+            {{ t('learn.sections.accessControl') }}
           </h2>
           <div class="mt-3 grid gap-4 sm:grid-cols-3">
             <UPageCard
@@ -151,7 +162,7 @@ const TECH_STACK = [
 
         <section>
           <h2 class="text-sm font-semibold text-highlighted">
-            What you can do
+            {{ t('learn.sections.features') }}
           </h2>
           <UPageGrid class="mt-3 gap-4 sm:grid-cols-2">
             <UPageCard
@@ -169,10 +180,10 @@ const TECH_STACK = [
 
         <section>
           <h2 class="text-sm font-semibold text-highlighted">
-            Try it yourself
+            {{ t('learn.sections.tryIt') }}
           </h2>
           <p class="mt-1 text-sm text-muted">
-            A short path that touches most of the system in under a minute.
+            {{ t('learn.sections.tryItDescription') }}
           </p>
           <div class="mt-3 grid gap-3">
             <ULink
@@ -208,7 +219,7 @@ const TECH_STACK = [
 
         <section>
           <h2 class="text-sm font-semibold text-highlighted">
-            Under the hood
+            {{ t('learn.sections.tech') }}
           </h2>
           <div class="mt-3 divide-y divide-default rounded-lg border border-default">
             <div

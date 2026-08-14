@@ -1,10 +1,22 @@
 <script setup lang="ts">
 import { api } from '#convex/api'
 
+const { t } = useI18n()
 const { data: employees, error } = await useConvexQuery(api.employees.list, {})
 
 const search = ref('')
 const statusFilter = ref('all')
+const statusItems = computed(() => [
+  { label: t('common.status.all'), value: 'all' },
+  { label: t('common.status.active'), value: 'active' },
+  { label: t('common.status.inactive'), value: 'inactive' }
+])
+
+function statusLabel(status: string) {
+  return status === 'active' || status === 'inactive'
+    ? t(`common.status.${status}`)
+    : toLabel(status)
+}
 
 const filteredEmployees = computed(() => {
   return (employees.value ?? []).filter((employee) => {
@@ -20,7 +32,7 @@ const filteredEmployees = computed(() => {
   <UDashboardPanel id="employees">
     <template #header>
       <UDashboardNavbar
-        title="Employees"
+        :title="t('employees.title')"
         :ui="{ root: 'border-b-0' }"
       >
         <template #leading>
@@ -30,7 +42,7 @@ const filteredEmployees = computed(() => {
 
       <div class="border-b border-default px-4 pb-3 sm:px-6">
         <p class="text-sm text-muted">
-          Browse employees and manage their resource access.
+          {{ t('employees.description') }}
         </p>
       </div>
     </template>
@@ -49,18 +61,14 @@ const filteredEmployees = computed(() => {
             v-model="search"
             class="max-w-sm"
             icon="i-lucide-search"
-            placeholder="Filter by name..."
+            :placeholder="t('employees.filterName')"
           />
 
           <USelect
             v-model="statusFilter"
-            :items="[
-              { label: 'All', value: 'all' },
-              { label: 'Active', value: 'active' },
-              { label: 'Inactive', value: 'inactive' }
-            ]"
+            :items="statusItems"
             :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-            placeholder="Filter status"
+            :placeholder="t('employees.filterStatus')"
             class="min-w-28"
           />
         </div>
@@ -102,7 +110,7 @@ const filteredEmployees = computed(() => {
                 <UBadge
                   :color="employee.status === 'active' ? 'success' : 'neutral'"
                   variant="subtle"
-                  :label="toLabel(employee.status)"
+                  :label="statusLabel(employee.status)"
                 />
               </div>
             </template>
@@ -113,7 +121,7 @@ const filteredEmployees = computed(() => {
           v-if="!filteredEmployees.length"
           class="py-12 text-center text-muted"
         >
-          No employees found.
+          {{ t('employees.empty') }}
         </div>
       </template>
     </template>

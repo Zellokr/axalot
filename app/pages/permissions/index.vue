@@ -4,9 +4,9 @@ import { h, resolveComponent } from 'vue'
 import { api } from '#convex/api'
 
 const UButton = resolveComponent('UButton')
-const UAvatar = resolveComponent('UAvatar')
-const UBadge = resolveComponent('UBadge')
 
+const { t, locale } = useI18n()
+const dateLocale = computed(() => locale.value === 'es' ? 'es-ES' : 'en-US')
 const { data: permissions, status, error } = await useConvexQuery(api.permissions.list, {})
 
 const accessLevelVariant = {
@@ -17,6 +17,16 @@ const accessLevelVariant = {
 
 const search = ref('')
 const accessLevelFilter = ref('all')
+const accessLevelItems = computed(() => [
+  { label: t('common.status.all'), value: 'all' },
+  { label: t('common.accessLevel.read'), value: 'read' },
+  { label: t('common.accessLevel.write'), value: 'write' },
+  { label: t('common.accessLevel.admin'), value: 'admin' }
+])
+
+function accessLevelLabel(level: keyof typeof accessLevelVariant) {
+  return t(`common.accessLevel.${level}`)
+}
 
 const filteredPermissions = computed(() => {
   return (permissions.value ?? []).filter((permission) => {
@@ -33,18 +43,18 @@ const filteredPermissions = computed(() => {
 
 type PermissionRow = NonNullable<typeof permissions.value>[number]
 
-const columns: TableColumn<PermissionRow>[] = [
+const columns = computed<TableColumn<PermissionRow>[]>(() => [
   {
     accessorKey: 'employee',
-    header: 'Employee'
+    header: t('common.table.employee')
   },
   {
     accessorKey: 'resource',
-    header: 'Resource'
+    header: t('common.table.resource')
   },
   {
     accessorKey: 'accessLevel',
-    header: 'Access level',
+    header: t('common.table.accessLevel'),
     filterFn: 'equals'
   },
   {
@@ -55,7 +65,7 @@ const columns: TableColumn<PermissionRow>[] = [
       return h(UButton, {
         color: 'neutral',
         variant: 'ghost',
-        label: 'Granted at',
+        label: t('common.table.grantedAt'),
         icon: isSorted
           ? isSorted === 'asc'
             ? 'i-lucide-arrow-up-narrow-wide'
@@ -66,14 +76,14 @@ const columns: TableColumn<PermissionRow>[] = [
       })
     }
   }
-]
+])
 </script>
 
 <template>
   <UDashboardPanel id="permissions">
     <template #header>
       <UDashboardNavbar
-        title="Permissions"
+        :title="t('permissions.title')"
         :ui="{ root: 'border-b-0' }"
       >
         <template #leading>
@@ -83,7 +93,7 @@ const columns: TableColumn<PermissionRow>[] = [
 
       <div class="border-b border-default px-4 pb-3 sm:px-6">
         <p class="text-sm text-muted">
-          Review every active resource grant across your organization.
+          {{ t('permissions.description') }}
         </p>
       </div>
     </template>
@@ -94,19 +104,14 @@ const columns: TableColumn<PermissionRow>[] = [
           v-model="search"
           class="max-w-sm"
           icon="i-lucide-search"
-          placeholder="Filter by employee or resource..."
+          :placeholder="t('permissions.filterSearch')"
         />
 
         <USelect
           v-model="accessLevelFilter"
-          :items="[
-            { label: 'All', value: 'all' },
-            { label: 'Read', value: 'read' },
-            { label: 'Write', value: 'write' },
-            { label: 'Admin', value: 'admin' }
-          ]"
+          :items="accessLevelItems"
           :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-          placeholder="Filter access level"
+          :placeholder="t('permissions.filterAccess')"
           class="min-w-36"
         />
       </div>
@@ -115,7 +120,7 @@ const columns: TableColumn<PermissionRow>[] = [
         v-if="status === 'pending'"
         class="text-sm text-muted"
       >
-        Loading permissions...
+        {{ t('permissions.loading') }}
       </p>
 
       <UAlert
@@ -147,7 +152,7 @@ const columns: TableColumn<PermissionRow>[] = [
 
               <div class="min-w-0">
                 <p class="truncate font-medium text-highlighted">
-                  {{ row.original.employee?.name ?? 'Unknown employee' }}
+                  {{ row.original.employee?.name ?? t('common.unknown.employee') }}
                 </p>
                 <p
                   v-if="row.original.employee"
@@ -162,13 +167,13 @@ const columns: TableColumn<PermissionRow>[] = [
           <template #resource-cell="{ row }">
             <div class="flex items-center gap-2">
               <span class="font-medium text-highlighted">
-                {{ row.original.resource?.name ?? 'Unknown resource' }}
+                {{ row.original.resource?.name ?? t('common.unknown.resource') }}
               </span>
               <UBadge
                 v-if="row.original.resource?.sensitive"
                 color="warning"
                 variant="subtle"
-                label="Sensitive"
+                :label="t('common.resourceSensitivity.sensitive')"
               />
             </div>
           </template>
@@ -177,12 +182,12 @@ const columns: TableColumn<PermissionRow>[] = [
             <UBadge
               color="neutral"
               :variant="accessLevelVariant[row.original.accessLevel]"
-              :label="toLabel(row.original.accessLevel)"
+              :label="accessLevelLabel(row.original.accessLevel)"
             />
           </template>
 
           <template #grantedAt-cell="{ row }">
-            {{ new Date(row.original.grantedAt).toLocaleDateString() }}
+            {{ formatDateTime(row.original.grantedAt, dateLocale) }}
           </template>
         </UTable>
 
@@ -190,7 +195,7 @@ const columns: TableColumn<PermissionRow>[] = [
           v-if="!filteredPermissions.length && permissions?.length"
           class="py-12 text-center text-muted"
         >
-          No permissions found.
+          {{ t('permissions.noResults') }}
         </div>
 
         <div
@@ -205,10 +210,10 @@ const columns: TableColumn<PermissionRow>[] = [
           </div>
 
           <p class="text-sm font-medium text-highlighted">
-            No permissions yet
+            {{ t('permissions.empty') }}
           </p>
           <p class="mt-1 text-sm text-dimmed">
-            Resource grants will appear here once employees are given access.
+            {{ t('permissions.emptyDescription') }}
           </p>
         </div>
       </template>

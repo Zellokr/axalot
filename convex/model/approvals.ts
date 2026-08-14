@@ -1,5 +1,5 @@
 import type { Id } from '../_generated/dataModel'
-import type { MutationCtx } from '../_generated/server'
+import type { MutationCtx, QueryCtx } from '../_generated/server'
 import {
   ApprovalStatus,
   AuditStatus,
@@ -13,6 +13,33 @@ import { recordAudit } from './audit'
 import { samePolicyEvidence } from './policies'
 
 export const APPROVAL_TTL_MS = 24 * 60 * 60 * 1000
+
+export async function listApprovals(ctx: QueryCtx) {
+  const approvals = await ctx.db.query('approvals').order('desc').collect()
+
+  return await Promise.all(approvals.map(async (approval) => {
+    const [employee, resource] = await Promise.all([
+      ctx.db.get(approval.employeeId),
+      ctx.db.get(approval.resourceId)
+    ])
+
+    return { ...approval, employee, resource }
+  }))
+}
+
+export async function getLatestApproval(ctx: QueryCtx, employeeId: Id<'employees'>, resourceId: Id<'resources'>) {
+  const approvals = await ctx.db
+    .query('approvals')
+    .withIndex('by_employee_resource_status', q => q
+      .eq('employeeId', employeeId)
+      .eq('resourceId', resourceId))
+    .collect()
+
+  return approvals.reduce<typeof approvals[number] | null>(
+    (latest, approval) => (!latest || approval.createdAt > latest.createdAt) ? approval : latest,
+    null
+  )
+}
 
 type ApprovalTransition = {
   operation: AccessOperation

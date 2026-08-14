@@ -1,75 +1,89 @@
 <script setup lang="ts">
 import { api } from '#convex/api'
 
+const { t } = useI18n()
 const { data: overview, status, error } = await useConvexQuery(api.dashboard.overview, {})
 
 const stats = computed(() => overview.value?.stats)
 
 const cards = computed(() => [
   {
-    label: 'Employees',
+    label: t('overview.cards.employees'),
     icon: 'i-lucide-users',
     value: stats.value?.employees ?? 0,
-    description: 'People managed by OpsPilot',
+    description: t('overview.cards.employeesDescription'),
     to: '/employees'
   },
   {
-    label: 'Resources',
+    label: t('overview.cards.resources'),
     icon: 'i-lucide-server',
     value: stats.value?.resources ?? 0,
-    description: 'Connected company resources',
+    description: t('overview.cards.resourcesDescription'),
     to: '/resources'
   },
   {
-    label: 'Permissions',
+    label: t('overview.cards.permissions'),
     icon: 'i-lucide-shield-check',
     value: stats.value?.permissions ?? 0,
-    description: 'Active resource grants',
+    description: t('overview.cards.permissionsDescription'),
     to: '/permissions'
   },
   {
-    label: 'Audit events',
+    label: t('overview.cards.auditEvents'),
     icon: 'i-lucide-history',
     value: stats.value?.auditEvents ?? 0,
-    description: 'Recent recorded actions',
+    description: t('overview.cards.auditDescription'),
     to: '/audit-log'
   }
 ])
 
-const quickActions = [
+const quickActions = computed(() => [
   {
-    label: 'Ask OpsPilot',
-    description: 'Manage access using AI',
+    label: t('overview.quickActions.agent'),
+    description: t('overview.quickActions.agentDescription'),
     icon: 'i-lucide-sparkles',
     to: '/agent',
     highlight: true
   },
   {
-    label: 'Employees',
-    description: 'Review employee access',
+    label: t('overview.quickActions.employees'),
+    description: t('overview.quickActions.employeesDescription'),
     icon: 'i-lucide-users',
     to: '/employees'
   },
   {
-    label: 'Resources',
-    description: 'Manage company systems',
+    label: t('overview.quickActions.resources'),
+    description: t('overview.quickActions.resourcesDescription'),
     icon: 'i-lucide-server',
     to: '/resources'
   }
-]
+])
 
 const statusColor = {
   success: 'bg-success',
   rejected: 'bg-error',
   pending: 'bg-warning'
 } as const
+
+function auditActionLabel(action: string) {
+  const key = AUDIT_ACTION_KEYS[action]
+  return key ? t(key) : toAuditActionLabel(action)
+}
+
+function auditSourceLabel(source: string) {
+  return ['admin', 'agent', 'system'].includes(source) ? t(`audit.source.${source}`) : toLabel(source)
+}
+
+function auditStatusLabel(eventStatus: string) {
+  return ['success', 'rejected', 'pending'].includes(eventStatus) ? t(`audit.status.${eventStatus}`) : toLabel(eventStatus)
+}
 </script>
 
 <template>
   <UDashboardPanel id="overview">
     <template #header>
       <UDashboardNavbar
-        title="Overview"
+        :title="t('overview.title')"
         :ui="{ root: 'border-b-0' }"
       >
         <template #leading>
@@ -79,7 +93,7 @@ const statusColor = {
 
       <div class="border-b border-default px-4 pb-3 sm:px-6">
         <p class="text-sm text-muted">
-          Monitor employees, resources and access across your organization.
+          {{ t('overview.description') }}
         </p>
       </div>
     </template>
@@ -89,7 +103,7 @@ const statusColor = {
         v-if="error"
         color="error"
         icon="i-lucide-triangle-alert"
-        title="Could not load the overview."
+        :title="t('overview.error')"
       />
 
       <template v-else>
@@ -129,10 +143,10 @@ const statusColor = {
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-sm font-semibold text-highlighted">
-                    Recent activity
+                    {{ t('overview.recent.title') }}
                   </p>
                   <p class="mt-0.5 text-xs text-dimmed">
-                    Latest actions across OpsPilot
+                    {{ t('overview.recent.description') }}
                   </p>
                 </div>
 
@@ -140,7 +154,7 @@ const statusColor = {
                   to="/audit-log"
                   class="text-xs font-medium text-muted hover:text-highlighted"
                 >
-                  View all
+                  {{ t('overview.recent.viewAll') }}
                 </ULink>
               </div>
             </template>
@@ -157,10 +171,10 @@ const statusColor = {
               </div>
 
               <p class="text-sm font-medium text-highlighted">
-                No activity yet
+                {{ t('overview.recent.empty') }}
               </p>
               <p class="mt-1 max-w-xs text-xs leading-5 text-dimmed">
-                Actions performed by administrators and the AI agent will appear here.
+                {{ t('overview.recent.emptyDescription') }}
               </p>
             </div>
 
@@ -182,10 +196,10 @@ const statusColor = {
 
                 <div class="min-w-0 flex-1">
                   <p class="truncate text-sm font-medium text-highlighted">
-                    {{ toAuditActionLabel(event.action) }}
+                    {{ auditActionLabel(event.action) }}
                   </p>
                   <p class="mt-0.5 text-xs capitalize text-dimmed">
-                    {{ event.source }} · {{ event.status }}
+                    {{ auditSourceLabel(event.source) }} · {{ auditStatusLabel(event.status) }}
                   </p>
                 </div>
               </div>
@@ -198,10 +212,10 @@ const statusColor = {
           >
             <template #header>
               <p class="text-sm font-semibold text-highlighted">
-                Quick actions
+                {{ t('overview.quickActions.title') }}
               </p>
               <p class="mt-1 text-xs text-dimmed">
-                Common administration tasks
+                {{ t('overview.quickActions.description') }}
               </p>
             </template>
 

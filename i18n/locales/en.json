@@ -1,0 +1,518 @@
+{
+  "common": {
+    "accessLevel": {
+      "admin": "Admin",
+      "noAccess": "No access",
+      "read": "Read",
+      "write": "Write"
+    },
+    "actions": {
+      "approve": "Approve",
+      "back": "Back",
+      "cancel": "Cancel",
+      "reject": "Reject",
+      "revoke": "Revoke"
+    },
+    "aria": {
+      "accessActions": "Access actions"
+    },
+    "employeeCount": {
+      "one": "{count} employee",
+      "other": "{count} employees"
+    },
+    "language": {
+      "switchTo": {
+        "en": "Switch to English",
+        "es": "Switch to Spanish"
+      }
+    },
+    "resourceSensitivity": {
+      "sensitive": "Sensitive",
+      "standard": "Standard"
+    },
+    "resourceType": {
+      "application": "Application",
+      "environment": "Environment",
+      "infrastructure": "Infrastructure"
+    },
+    "status": {
+      "active": "Active",
+      "all": "All",
+      "inactive": "Inactive"
+    },
+    "table": {
+      "accessLevel": "Access level",
+      "employee": "Employee",
+      "grantedAt": "Granted at",
+      "resource": "Resource",
+      "type": "Type"
+    },
+    "unknown": {
+      "employee": "Unknown employee",
+      "resource": "Unknown resource"
+    }
+  },
+  "home": {
+    "description": "Jump straight into any Axalot panel.",
+    "title": "Home"
+  },
+  "employees": {
+    "description": "Browse employees and manage their resource access.",
+    "detail": {
+      "accessGranted": "Access granted",
+      "accessLevelUpdated": "Access level updated",
+      "approvalRequested": "Approval requested",
+      "approvalRequestedDescription": "No access has changed. The request for {name} is awaiting human approval.",
+      "couldNotRevoke": "Could not revoke access",
+      "couldNotUpdate": "Could not update access",
+      "denied": "Access change denied",
+      "fallbackName": "Employee",
+      "grantAs": "Grant as {level}",
+      "noChange": "No change needed",
+      "noChangeDescription": "{name} already has {level} on {resource}.",
+      "noResources": "No resources have been added to the organization yet.",
+      "notFound": "Employee not found.",
+      "permissionsCount": "{active} / {total} permissions",
+      "revokeAccess": "Revoke access",
+      "revokeApprovalDescription": "No access has changed. The revocation for {name} is awaiting human approval.",
+      "revokeDescription": "Are you sure you want to revoke {resource} access for {name}? This action cannot be undone.",
+      "revokeFallbackResource": "this resource",
+      "revocationDenied": "Revocation denied",
+      "revoked": "Access revoked",
+      "revokedDescription": "{name} no longer has access to {resource}.",
+      "setTo": "Set to {level}",
+      "updatedDescription": "{name} is now {level} on {resource}."
+    },
+    "empty": "No employees found.",
+    "filterName": "Filter by name...",
+    "filterStatus": "Filter status",
+    "title": "Employees"
+  },
+  "overview": {
+    "cards": {
+      "auditDescription": "Recent recorded actions",
+      "auditEvents": "Audit events",
+      "employees": "Employees",
+      "employeesDescription": "People managed by OpsPilot",
+      "permissions": "Permissions",
+      "permissionsDescription": "Active resource grants",
+      "resources": "Resources",
+      "resourcesDescription": "Connected company resources"
+    },
+    "description": "Monitor employees, resources and access across your organization.",
+    "error": "Could not load the overview.",
+    "quickActions": {
+      "agent": "Ask OpsPilot",
+      "agentDescription": "Manage access using AI",
+      "description": "Common administration tasks",
+      "employees": "Employees",
+      "employeesDescription": "Review employee access",
+      "resources": "Resources",
+      "resourcesDescription": "Manage company systems",
+      "title": "Quick actions"
+    },
+    "recent": {
+      "description": "Latest actions across OpsPilot",
+      "empty": "No activity yet",
+      "emptyDescription": "Actions performed by administrators and the AI agent will appear here.",
+      "title": "Recent activity",
+      "viewAll": "View all"
+    },
+    "title": "Overview"
+  },
+  "permissions": {
+    "description": "Review every active resource grant across your organization.",
+    "empty": "No permissions yet",
+    "emptyDescription": "Resource grants will appear here once employees are given access.",
+    "filterAccess": "Filter access level",
+    "filterSearch": "Filter by employee or resource...",
+    "loading": "Loading permissions...",
+    "noResults": "No permissions found.",
+    "title": "Permissions"
+  },
+  "resources": {
+    "activePermissions": "Active permissions",
+    "description": "Manage company applications, environments and infrastructure.",
+    "detail": {
+      "accessLevelUpdated": "Access level updated",
+      "approvalRequested": "Approval requested",
+      "approvalRequestedDescription": "No access has changed. The request for {name} is awaiting human approval.",
+      "couldNotRevoke": "Could not revoke access",
+      "couldNotUpdate": "Could not update access",
+      "denied": "Access change denied",
+      "fallbackEmployee": "this employee",
+      "fallbackEmployeeSentence": "This employee",
+      "fallbackName": "Resource",
+      "noChange": "No change needed",
+      "noChangeDescription": "{name} already has {level} on {resource}.",
+      "noPermissions": "No permissions yet",
+      "noPermissionsDescription": "No employee has been granted access to this resource yet.",
+      "notFound": "Resource not found.",
+      "revokeAccess": "Revoke access",
+      "revokeApprovalDescription": "No access has changed. The revocation for {name} is awaiting human approval.",
+      "revokeDescription": "Are you sure you want to revoke {resource} access for {name}? This action cannot be undone.",
+      "revocationDenied": "Revocation denied",
+      "revoked": "Access revoked",
+      "revokedDescription": "{name} no longer has access to {resource}.",
+      "setTo": "Set to {level}",
+      "updatedDescription": "{name} is now {level} on {resource}."
+    },
+    "empty": "No resources yet",
+    "emptyDescription": "Company resources will appear here once they are added.",
+    "filterName": "Filter by name...",
+    "filterType": "Filter type",
+    "loading": "Loading resources...",
+    "noResults": "No resources found.",
+    "title": "Resources"
+  },
+  "navigation": {
+    "agent": "Agent",
+    "approvals": "Approvals",
+    "auditLog": "Audit Log",
+    "employees": "Employees",
+    "home": "Home",
+    "learn": "Learn",
+    "overview": "Overview",
+    "permissions": "Permissions",
+    "policies": "Policies",
+    "resources": "Resources"
+  },
+  "agent": {
+    "errors": {
+      "rateLimit": "Axalot has hit today's model usage limit. Try again in about {minutes} minutes.",
+      "toolIncomplete": "Tool call did not complete"
+    },
+    "aria": {
+      "clearConversation": "Clear conversation",
+      "conversation": "Conversation with Axalot",
+      "loadingConversation": "Loading conversation",
+      "message": "Message Axalot"
+    },
+    "clear": {
+      "action": "Clear",
+      "couldNot": "Could not clear conversation",
+      "description": "This permanently deletes the conversation history with Axalot. This action cannot be undone.",
+      "success": "Conversation cleared",
+      "title": "Clear conversation"
+    },
+    "conversationUnavailable": "Conversation unavailable",
+    "description": "Manage individual employee access with a policy-governed IAM assistant.",
+    "empty": {
+      "description": "Inspect permissions, understand policy, or request one individual access change.",
+      "title": "Ask Axalot about access"
+    },
+    "examples": {
+      "explainPolicy": "Explain the policy for Production access.",
+      "inspectAccess": "What access does María have to GitHub?",
+      "requestAccess": "Give María read access to Jira."
+    },
+    "loadingConversation": "Loading conversation…",
+    "messageNotSent": "Message not sent",
+    "messageNotSentDescription": "Axalot couldn't respond right now. Wait a moment and try again.",
+    "promptHint": "Enter to send · Shift+Enter for a new line",
+    "promptPlaceholder": "Ask about access or request an individual change…",
+    "rateLimitNotice": "The model has a shared daily usage limit: it may be temporarily unavailable if it runs out.",
+    "shimmer": "Axalot is checking context, policy, and risk…",
+    "status": {
+      "needsAttention": "Needs attention",
+      "ready": "Ready",
+      "working": "Working"
+    },
+    "title": "Agent",
+    "tools": {
+      "cancelActionProposal": "Cancelling proposed change",
+      "createActionProposal": "Preparing confirmation",
+      "executeActionProposal": "Executing confirmed change",
+      "findEmployee": "Finding employee",
+      "findResource": "Finding resource",
+      "getApprovalStatus": "Checking approval status",
+      "getEmployeeAccess": "Reviewing current access",
+      "listEmployees": "Listing employees",
+      "listPolicies": "Reviewing policy catalog",
+      "revokeAccess": "Revoking access",
+      "searchPolicies": "Consulting policy catalog",
+      "setAccessLevel": "Applying access level",
+      "setPolicyStatus": "Updating policy status"
+    },
+    "toolStates": {
+      "awaitingApproval": "Awaiting approval",
+      "completed": "Completed",
+      "denied": "Denied",
+      "failed": "Action failed",
+      "working": "Working…"
+    },
+    "trustCue": "The Policy Engine authorizes every access change. Axalot cannot bypass it."
+  },
+  "approvals": {
+    "changeArrow": "{from} → {to}",
+    "confirmApprove": {
+      "description": "{name} will be granted {level} on {resource}.",
+      "title": "Approve request"
+    },
+    "confirmReject": {
+      "description": "{name}'s request on {resource} will be rejected. Access does not change.",
+      "title": "Reject request"
+    },
+    "couldNotApprove": "Could not approve the request",
+    "couldNotReject": "Could not reject the request",
+    "description": "Decide access requests for sensitive resources that need human approval.",
+    "empty": "No approval requests",
+    "emptyDescription": "Requests appear here when access to a sensitive resource needs an administrator's decision.",
+    "expired": "The request has expired",
+    "expiresAt": "Expires on",
+    "filterSearch": "Filter by employee or resource...",
+    "filterStatus": "Filter by status",
+    "loading": "Loading approvals...",
+    "noResults": "No requests found.",
+    "policyDenied": "The policy no longer allows this change",
+    "rejected": "Request rejected",
+    "requestedAt": "Requested on",
+    "requestedBy": "Requested by",
+    "stale": "Current access no longer matches the request",
+    "status": {
+      "approved": "Approved",
+      "expired": "Expired",
+      "pending": "Pending",
+      "rejected": "Rejected",
+      "stale": "Stale"
+    },
+    "table": {
+      "change": "Change",
+      "requested": "Requested",
+      "status": "Status"
+    },
+    "title": "Approvals",
+    "toastApproved": "Access granted",
+    "toastRejected": "Request rejected"
+  },
+  "audit": {
+    "actions": {
+      "accessDowngraded": "Access downgraded",
+      "accessGranted": "Access granted",
+      "accessPolicyDenied": "Access denied by policy",
+      "accessRevoked": "Access revoked",
+      "accessUnchanged": "Access unchanged",
+      "accessUpgraded": "Access upgraded",
+      "agentConversationCleared": "Agent conversation cleared",
+      "approvalApproved": "Approval approved",
+      "approvalCreated": "Approval created",
+      "approvalExpired": "Approval expired",
+      "approvalPolicyChanged": "Approval policy changed",
+      "approvalRejected": "Approval rejected",
+      "approvalReused": "Approval reused",
+      "approvalStale": "Approval stale",
+      "policyActivated": "Policy activated",
+      "policyDeactivated": "Policy deactivated",
+      "proposalCancelled": "Proposal cancelled",
+      "proposalCreated": "Proposal created",
+      "proposalExecuted": "Proposal executed",
+      "proposalExpired": "Proposal expired",
+      "proposalInvalidated": "Proposal invalidated",
+      "proposalPolicyChanged": "Proposal policy changed",
+      "proposalPolicyDenied": "Proposal denied by policy",
+      "proposalStale": "Proposal stale"
+    },
+    "description": "Every action recorded by administrators and the AI agent.",
+    "empty": "No activity yet",
+    "emptyDescription": "Actions performed by administrators and the AI agent will appear here.",
+    "loading": "Loading audit log...",
+    "source": {
+      "admin": "Admin",
+      "agent": "Agent",
+      "system": "System"
+    },
+    "status": {
+      "pending": "Pending",
+      "rejected": "Rejected",
+      "success": "Success"
+    },
+    "table": {
+      "access": "Access",
+      "action": "Action",
+      "date": "Date"
+    },
+    "title": "Audit Log"
+  },
+  "policies": {
+    "anyEmployee": "Any employee",
+    "anyResource": "Any resource",
+    "catalog": {
+      "inactive-privilege-growth": {
+        "title": "Inactive employee privilege growth",
+        "description": "Inactive employees cannot receive new or increased access.",
+        "rules": {
+          "privilegeGrowth": "Inactive employees cannot gain privileges."
+        }
+      },
+      "universal-access-reduction": {
+        "title": "Universal access reduction",
+        "description": "Individual access reductions are allowed for active and inactive employees.",
+        "rules": {
+          "downgrade": "Individual access downgrades are permitted.",
+          "revoke": "Individual access revocations are permitted."
+        }
+      },
+      "engineering-collaboration": {
+        "title": "Engineering collaboration access",
+        "description": "Active developers may collaborate through GitHub, Jira, and Staging.",
+        "rules": {
+          "collaboration": "Active developers may use engineering collaboration resources."
+        }
+      },
+      "qa-delivery": {
+        "title": "QA delivery access",
+        "description": "Active QA employees may use Jira and Staging.",
+        "rules": {
+          "delivery": "Active QA employees may use delivery resources."
+        }
+      },
+      "support-operations": {
+        "title": "Support operations access",
+        "description": "Active support employees may use Jira and VPN within defined levels.",
+        "rules": {
+          "jira": "Active support employees may work in Jira.",
+          "vpnRead": "Active support employees may receive read access to VPN."
+        }
+      },
+      "design-collaboration": {
+        "title": "Design collaboration access",
+        "description": "Active designers may read Jira.",
+        "rules": {
+          "jiraRead": "Active designers may read Jira."
+        }
+      },
+      "product-management": {
+        "title": "Product management access",
+        "description": "Active product managers may manage Jira and read GitHub.",
+        "rules": {
+          "jira": "Active product managers may manage Jira.",
+          "githubRead": "Active product managers may read GitHub."
+        }
+      },
+      "devops-platform": {
+        "title": "DevOps platform access",
+        "description": "Active senior and lead DevOps employees may administer platform resources.",
+        "rules": {
+          "platform": "Active senior and lead DevOps employees may use platform resources."
+        }
+      }
+    },
+    "couldNotUpdate": "Could not update policy",
+    "deactivated": "Policy deactivated",
+    "description": "Review the policy catalog and activate or deactivate the rules the Policy Engine enforces.",
+    "effect": {
+      "allow": "Allow",
+      "deny": "Deny"
+    },
+    "empty": "No policies yet",
+    "emptyDescription": "Policies will appear here once the catalog is seeded.",
+    "enforced": "enforced by the Policy Engine",
+    "inactive": "inactive",
+    "loading": "Loading policies...",
+    "noRules": "No rules defined.",
+    "operation": {
+      "revoke": "Revoke access",
+      "setAccessLevel": "Set access level"
+    },
+    "resource": {
+      "nonSensitiveOnly": "Non-sensitive only",
+      "sensitiveOnly": "Sensitive only"
+    },
+    "status": {
+      "active": "Active",
+      "draft": "Draft",
+      "superseded": "Inactive"
+    },
+    "subject": {
+      "department": "Dept: {values}",
+      "level": "Level: {values}",
+      "role": "Role: {values}",
+      "status": "Status: {values}"
+    },
+    "subjectValues": {
+      "level": {
+        "lead": "Lead",
+        "senior": "Senior"
+      },
+      "role": {
+        "designer": "Designer",
+        "developer": "Developer",
+        "devops": "DevOps",
+        "productManager": "Product Manager",
+        "qa": "QA",
+        "support": "Support"
+      }
+    },
+    "title": "Policies",
+    "toggleAria": "Toggle policy {title}",
+    "updatedDescription": "{title} is now {state}.",
+    "activated": "Policy activated"
+  },
+  "learn": {
+    "concepts": {
+      "audit": {
+        "description": "Grants, revokes, denials, policy toggles, and agent actions all write to the same audit trail — so you can always see who, or what, did something, and why.",
+        "title": "Everything is audited"
+      },
+      "policy": {
+        "description": "Every access change — from the UI or from the AI agent — goes through the same TypeScript rule engine. The agent can propose a change; it can never apply one the policy catalog doesn't allow.",
+        "title": "A deterministic Policy Engine decides"
+      },
+      "sensitive": {
+        "description": "Resources marked sensitive (like Production) can't be granted directly, even by the agent. The request becomes an approval instead, and no permission changes until an admin decides.",
+        "title": "Sensitive resources need a human"
+      }
+    },
+    "description": "What this demo is, how it's built, and how to try it yourself.",
+    "features": {
+      "agent": "Ask in plain language — \"What access does María have to GitHub?\" or \"Give Pedro read access to Jira.\" Responses stream in real time, with every tool call shown as it happens.",
+      "approvals": "Access requests for sensitive resources waiting on a decision. Approve or reject them — the permission doesn't change until then.",
+      "audit": "The full trail — what was requested, whether it was granted, denied, or sent for approval, and whether an admin or the agent did it.",
+      "employees": "Browse the team and open any employee to see, and change, their access to every company resource.",
+      "overview": "Live counts and a feed of the most recent actions across the whole system.",
+      "permissions": "Every active grant across the organization, in one sortable table.",
+      "policies": "The actual rule catalog the Policy Engine enforces. Deactivate a rule and watch what the agent and the UI are allowed to do change immediately.",
+      "resources": "The applications, environments, and infrastructure access can be granted to, including which ones are marked sensitive."
+    },
+    "intro": "Axalot is an internal IAM (identity and access management) console. An administrator reviews or changes what employees can access — through the UI or by talking to an AI agent in plain language. The agent can look things up and propose changes, but a deterministic backend decides what's actually allowed.",
+    "sections": {
+      "accessControl": "How access control works here",
+      "features": "What you can do",
+      "tech": "Under the hood",
+      "tryIt": "Try it yourself",
+      "tryItDescription": "A short path that touches most of the system in under a minute."
+    },
+    "tech": {
+      "agent": "The agent's tool-calling loop and language model",
+      "convex": "Database, queries, mutations, and HTTP Actions — no separate backend server",
+      "frontend": "Frontend and dashboard layout",
+      "rag": "Advisory policy search the agent can cite — never authoritative",
+      "streaming": "Real token-by-token streaming from the agent to the browser",
+      "typescript": "End to end, including the policy engine itself",
+      "typescriptLabel": "TypeScript, strict mode"
+    },
+    "title": "Learn",
+    "tryIt": {
+      "ask": {
+        "description": "\"What access does María have to GitHub?\" — watch it look up the employee and the resource, then answer.",
+        "title": "Ask the agent a question"
+      },
+      "decide": {
+        "description": "If you requested access to a sensitive resource, it's now pending. Go to Approvals and approve or reject it as the admin.",
+        "title": "Decide an approval"
+      },
+      "audit": {
+        "description": "Everything above is already there, in order, with who did it and why.",
+        "title": "Check the trail"
+      },
+      "policy": {
+        "description": "Deactivate the rule that allowed the request above, then ask again — the outcome changes immediately.",
+        "title": "Toggle a policy off"
+      },
+      "request": {
+        "description": "\"Give Pedro read access to Jira.\" A real grant happens, if the policy catalog allows it.",
+        "title": "Request a real change"
+      }
+    }
+  }
+}

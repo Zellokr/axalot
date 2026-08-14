@@ -5,7 +5,9 @@ import test from 'node:test'
 import {
   buildInitialMessages,
   canSendAgentPrompt,
-  toolStateLabel
+  TOOL_INCOMPLETE_ERROR_KEY,
+  TOOL_LABEL_KEYS,
+  toolStateLabelKey
 } from '../../app/utils/agentMessages.ts'
 
 test('buildInitialMessages groups one turn into a single assistant message with ordered dynamic-tool and text parts', () => {
@@ -80,13 +82,40 @@ test('buildInitialMessages marks a tool call with no matching result as output-e
   }])
 })
 
-test('toolStateLabel reflects the dynamic-tool part lifecycle', () => {
-  assert.equal(toolStateLabel('input-streaming'), 'Working…')
-  assert.equal(toolStateLabel('input-available'), 'Working…')
-  assert.equal(toolStateLabel('output-error'), 'Action failed')
-  assert.equal(toolStateLabel('output-denied'), 'Denied')
-  assert.equal(toolStateLabel('approval-requested'), 'Awaiting approval')
-  assert.equal(toolStateLabel('output-available'), 'Completed')
+test('buildInitialMessages keeps a stable localized fallback when an incomplete tool has no backend error', () => {
+  const records = [{
+    _id: 'tool-call',
+    order: 1,
+    stepOrder: 0,
+    status: 'failed',
+    message: {
+      role: 'assistant',
+      content: [{
+        type: 'tool-call',
+        toolCallId: 'call-id',
+        toolName: 'findEmployee',
+        input: { query: 'María' }
+      }]
+    }
+  }]
+
+  const messages = buildInitialMessages(records)
+  const part = messages[0]?.parts[0]
+
+  assert.equal(TOOL_INCOMPLETE_ERROR_KEY, 'agent.errors.toolIncomplete')
+  assert.equal(part?.type, 'dynamic-tool')
+  assert.equal('errorText' in (part ?? {}) ? part.errorText : undefined, TOOL_INCOMPLETE_ERROR_KEY)
+})
+
+test('Agent tool helpers expose stable translation keys instead of English copy', () => {
+  assert.equal(TOOL_LABEL_KEYS.findEmployee, 'agent.tools.findEmployee')
+  assert.equal(TOOL_LABEL_KEYS.setAccessLevel, 'agent.tools.setAccessLevel')
+  assert.equal(toolStateLabelKey('input-streaming'), 'agent.toolStates.working')
+  assert.equal(toolStateLabelKey('input-available'), 'agent.toolStates.working')
+  assert.equal(toolStateLabelKey('output-error'), 'agent.toolStates.failed')
+  assert.equal(toolStateLabelKey('output-denied'), 'agent.toolStates.denied')
+  assert.equal(toolStateLabelKey('approval-requested'), 'agent.toolStates.awaitingApproval')
+  assert.equal(toolStateLabelKey('output-available'), 'agent.toolStates.completed')
 })
 
 test('canSendAgentPrompt rejects blank prompts and duplicate sends', () => {
@@ -121,8 +150,8 @@ test('Agent page streams live turns over the Convex HTTP action instead of the r
   assert.match(page, /DefaultChatTransport/)
   assert.match(page, /agent-chat/)
   assert.doesNotMatch(page, /api\.axalotAgent\.sendMessage/)
-  assert.match(page, /Policy Engine authorizes/)
-  assert.match(page, /What access does María have to GitHub\?/)
+  assert.match(page, /t\('agent\.trustCue'\)/)
+  assert.match(page, /t\('agent\.examples\.inspectAccess'\)/)
   assert.match(page, /messages\.length === 0/)
   assert.match(page, /:disabled="!canSubmit"/)
   assert.doesNotMatch(page, /threadId\s*:/)

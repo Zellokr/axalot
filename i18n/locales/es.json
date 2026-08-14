@@ -1,0 +1,518 @@
+{
+  "common": {
+    "accessLevel": {
+      "admin": "Administrador",
+      "noAccess": "Sin acceso",
+      "read": "Lectura",
+      "write": "Escritura"
+    },
+    "actions": {
+      "approve": "Aprobar",
+      "back": "Volver",
+      "cancel": "Cancelar",
+      "reject": "Rechazar",
+      "revoke": "Revocar"
+    },
+    "aria": {
+      "accessActions": "Acciones de acceso"
+    },
+    "employeeCount": {
+      "one": "{count} empleado",
+      "other": "{count} empleados"
+    },
+    "language": {
+      "switchTo": {
+        "en": "Cambiar a inglés",
+        "es": "Cambiar a español"
+      }
+    },
+    "resourceSensitivity": {
+      "sensitive": "Sensible",
+      "standard": "Estándar"
+    },
+    "resourceType": {
+      "application": "Aplicación",
+      "environment": "Entorno",
+      "infrastructure": "Infraestructura"
+    },
+    "status": {
+      "active": "Activo",
+      "all": "Todos",
+      "inactive": "Inactivo"
+    },
+    "table": {
+      "accessLevel": "Nivel de acceso",
+      "employee": "Empleado",
+      "grantedAt": "Concedido el",
+      "resource": "Recurso",
+      "type": "Tipo"
+    },
+    "unknown": {
+      "employee": "Empleado desconocido",
+      "resource": "Recurso desconocido"
+    }
+  },
+  "home": {
+    "description": "Accede rápido a cualquier panel de Axalot.",
+    "title": "Inicio"
+  },
+  "employees": {
+    "description": "Consulta empleados y gestiona su acceso a los recursos.",
+    "detail": {
+      "accessGranted": "Acceso concedido",
+      "accessLevelUpdated": "Nivel de acceso actualizado",
+      "approvalRequested": "Aprobación solicitada",
+      "approvalRequestedDescription": "No se ha modificado ningún acceso. La solicitud para {name} espera aprobación humana.",
+      "couldNotRevoke": "No se pudo revocar el acceso",
+      "couldNotUpdate": "No se pudo actualizar el acceso",
+      "denied": "Cambio de acceso denegado",
+      "fallbackName": "Empleado",
+      "grantAs": "Conceder como {level}",
+      "noChange": "No se necesita ningún cambio",
+      "noChangeDescription": "{name} ya tiene acceso de {level} en {resource}.",
+      "noResources": "Todavía no se han añadido recursos a la organización.",
+      "notFound": "Empleado no encontrado.",
+      "permissionsCount": "{active} / {total} permisos",
+      "revokeAccess": "Revocar acceso",
+      "revokeApprovalDescription": "No se ha modificado ningún acceso. La revocación para {name} espera aprobación humana.",
+      "revokeDescription": "¿Seguro que quieres revocar el acceso a {resource} de {name}? Esta acción no se puede deshacer.",
+      "revokeFallbackResource": "este recurso",
+      "revocationDenied": "Revocación denegada",
+      "revoked": "Acceso revocado",
+      "revokedDescription": "{name} ya no tiene acceso a {resource}.",
+      "setTo": "Cambiar a {level}",
+      "updatedDescription": "{name} ahora tiene acceso de {level} en {resource}."
+    },
+    "empty": "No se encontraron empleados.",
+    "filterName": "Filtrar por nombre...",
+    "filterStatus": "Filtrar por estado",
+    "title": "Empleados"
+  },
+  "overview": {
+    "cards": {
+      "auditDescription": "Acciones registradas recientemente",
+      "auditEvents": "Eventos de auditoría",
+      "employees": "Empleados",
+      "employeesDescription": "Personas gestionadas por OpsPilot",
+      "permissions": "Permisos",
+      "permissionsDescription": "Accesos activos a recursos",
+      "resources": "Recursos",
+      "resourcesDescription": "Recursos de empresa conectados"
+    },
+    "description": "Supervisa empleados, recursos y accesos de tu organización.",
+    "error": "No se pudo cargar el resumen.",
+    "quickActions": {
+      "agent": "Preguntar a OpsPilot",
+      "agentDescription": "Gestiona accesos mediante IA",
+      "description": "Tareas de administración habituales",
+      "employees": "Empleados",
+      "employeesDescription": "Revisa el acceso de empleados",
+      "resources": "Recursos",
+      "resourcesDescription": "Gestiona sistemas de la empresa",
+      "title": "Acciones rápidas"
+    },
+    "recent": {
+      "description": "Últimas acciones de OpsPilot",
+      "empty": "Todavía no hay actividad",
+      "emptyDescription": "Aquí aparecerán las acciones de administradores y del agente de IA.",
+      "title": "Actividad reciente",
+      "viewAll": "Ver todo"
+    },
+    "title": "Resumen"
+  },
+  "permissions": {
+    "description": "Revisa todos los accesos activos a recursos de tu organización.",
+    "empty": "Todavía no hay permisos",
+    "emptyDescription": "Los accesos a recursos aparecerán cuando se concedan a empleados.",
+    "filterAccess": "Filtrar por nivel de acceso",
+    "filterSearch": "Filtrar por empleado o recurso...",
+    "loading": "Cargando permisos...",
+    "noResults": "No se encontraron permisos.",
+    "title": "Permisos"
+  },
+  "resources": {
+    "activePermissions": "Permisos activos",
+    "description": "Gestiona aplicaciones, entornos e infraestructura de la empresa.",
+    "detail": {
+      "accessLevelUpdated": "Nivel de acceso actualizado",
+      "approvalRequested": "Aprobación solicitada",
+      "approvalRequestedDescription": "No se ha modificado ningún acceso. La solicitud para {name} espera aprobación humana.",
+      "couldNotRevoke": "No se pudo revocar el acceso",
+      "couldNotUpdate": "No se pudo actualizar el acceso",
+      "denied": "Cambio de acceso denegado",
+      "fallbackEmployee": "este empleado",
+      "fallbackEmployeeSentence": "Este empleado",
+      "fallbackName": "Recurso",
+      "noChange": "No se necesita ningún cambio",
+      "noChangeDescription": "{name} ya tiene acceso de {level} en {resource}.",
+      "noPermissions": "Todavía no hay permisos",
+      "noPermissionsDescription": "Todavía no se ha concedido a ningún empleado acceso a este recurso.",
+      "notFound": "Recurso no encontrado.",
+      "revokeAccess": "Revocar acceso",
+      "revokeApprovalDescription": "No se ha modificado ningún acceso. La revocación para {name} espera aprobación humana.",
+      "revokeDescription": "¿Seguro que quieres revocar el acceso a {resource} de {name}? Esta acción no se puede deshacer.",
+      "revocationDenied": "Revocación denegada",
+      "revoked": "Acceso revocado",
+      "revokedDescription": "{name} ya no tiene acceso a {resource}.",
+      "setTo": "Cambiar a {level}",
+      "updatedDescription": "{name} ahora tiene acceso de {level} en {resource}."
+    },
+    "empty": "Todavía no hay recursos",
+    "emptyDescription": "Los recursos de la empresa aparecerán cuando se añadan.",
+    "filterName": "Filtrar por nombre...",
+    "filterType": "Filtrar por tipo",
+    "loading": "Cargando recursos...",
+    "noResults": "No se encontraron recursos.",
+    "title": "Recursos"
+  },
+  "navigation": {
+    "agent": "Agente",
+    "approvals": "Aprobaciones",
+    "auditLog": "Registro de auditoría",
+    "employees": "Empleados",
+    "home": "Inicio",
+    "learn": "Aprender",
+    "overview": "Resumen",
+    "permissions": "Permisos",
+    "policies": "Políticas",
+    "resources": "Recursos"
+  },
+  "agent": {
+    "errors": {
+      "rateLimit": "Axalot ha alcanzado el límite de uso del modelo por hoy. Vuelve a intentarlo en unos {minutes} minutos.",
+      "toolIncomplete": "La llamada a la herramienta no se completó"
+    },
+    "aria": {
+      "clearConversation": "Borrar conversación",
+      "conversation": "Conversación con Axalot",
+      "loadingConversation": "Cargando conversación",
+      "message": "Escribir a Axalot"
+    },
+    "clear": {
+      "action": "Borrar",
+      "couldNot": "No se pudo borrar la conversación",
+      "description": "Esto elimina permanentemente el historial de conversación con Axalot. Esta acción no se puede deshacer.",
+      "success": "Conversación borrada",
+      "title": "Borrar conversación"
+    },
+    "conversationUnavailable": "Conversación no disponible",
+    "description": "Gestiona el acceso individual de empleados con un asistente IAM gobernado por políticas.",
+    "empty": {
+      "description": "Consulta permisos, comprende las políticas o solicita un cambio de acceso individual.",
+      "title": "Pregunta a Axalot sobre accesos"
+    },
+    "examples": {
+      "explainPolicy": "Explica la política de acceso a Producción.",
+      "inspectAccess": "¿Qué acceso tiene María a GitHub?",
+      "requestAccess": "Concede a María acceso de lectura a Jira."
+    },
+    "loadingConversation": "Cargando conversación…",
+    "messageNotSent": "Mensaje no enviado",
+    "messageNotSentDescription": "Axalot no ha podido responder ahora mismo. Espera un momento y vuelve a intentarlo.",
+    "promptHint": "Intro para enviar · Mayús+Intro para una línea nueva",
+    "promptPlaceholder": "Pregunta sobre accesos o solicita un cambio individual…",
+    "rateLimitNotice": "El modelo tiene un límite de uso diario compartido: puede no estar disponible temporalmente si se agota.",
+    "shimmer": "Axalot está comprobando el contexto, la política y el riesgo…",
+    "status": {
+      "needsAttention": "Requiere atención",
+      "ready": "Listo",
+      "working": "Trabajando"
+    },
+    "title": "Agente",
+    "tools": {
+      "cancelActionProposal": "Cancelando el cambio propuesto",
+      "createActionProposal": "Preparando la confirmación",
+      "executeActionProposal": "Ejecutando el cambio confirmado",
+      "findEmployee": "Buscando al empleado",
+      "findResource": "Buscando el recurso",
+      "getApprovalStatus": "Consultando el estado de la aprobación",
+      "getEmployeeAccess": "Revisando el acceso actual",
+      "listEmployees": "Listando empleados",
+      "listPolicies": "Revisando el catálogo de políticas",
+      "revokeAccess": "Revocando el acceso",
+      "searchPolicies": "Consultando el catálogo de políticas",
+      "setAccessLevel": "Aplicando el nivel de acceso",
+      "setPolicyStatus": "Actualizando el estado de la política"
+    },
+    "toolStates": {
+      "awaitingApproval": "Esperando aprobación",
+      "completed": "Completado",
+      "denied": "Denegado",
+      "failed": "La acción falló",
+      "working": "Trabajando…"
+    },
+    "trustCue": "El motor de políticas autoriza cada cambio de acceso. Axalot no puede eludirlo."
+  },
+  "approvals": {
+    "changeArrow": "{from} → {to}",
+    "confirmApprove": {
+      "description": "Se concederá {level} a {name} sobre {resource}.",
+      "title": "Aprobar solicitud"
+    },
+    "confirmReject": {
+      "description": "La solicitud de {name} sobre {resource} quedará rechazada. El acceso no cambia.",
+      "title": "Rechazar solicitud"
+    },
+    "couldNotApprove": "No se pudo aprobar la solicitud",
+    "couldNotReject": "No se pudo rechazar la solicitud",
+    "description": "Decide las solicitudes de acceso a recursos sensibles que esperan aprobación humana.",
+    "empty": "No hay solicitudes de aprobación",
+    "emptyDescription": "Las solicitudes aparecerán aquí cuando el acceso a un recurso sensible necesite decisión de un administrador.",
+    "expired": "La solicitud ha caducado",
+    "expiresAt": "Caduca el",
+    "filterSearch": "Filtrar por empleado o recurso...",
+    "filterStatus": "Filtrar por estado",
+    "loading": "Cargando aprobaciones...",
+    "noResults": "No se encontraron solicitudes.",
+    "policyDenied": "La política ya no permite este cambio",
+    "rejected": "Solicitud rechazada",
+    "requestedAt": "Solicitado el",
+    "requestedBy": "Solicitado por",
+    "stale": "El acceso actual ya no coincide con la solicitud",
+    "status": {
+      "approved": "Aprobada",
+      "expired": "Caducada",
+      "pending": "Pendiente",
+      "rejected": "Rechazada",
+      "stale": "Obsoleta"
+    },
+    "table": {
+      "change": "Cambio",
+      "requested": "Solicitado",
+      "status": "Estado"
+    },
+    "title": "Aprobaciones",
+    "toastApproved": "Acceso concedido",
+    "toastRejected": "Solicitud rechazada"
+  },
+  "audit": {
+    "actions": {
+      "accessDowngraded": "Acceso reducido",
+      "accessGranted": "Acceso concedido",
+      "accessPolicyDenied": "Acceso denegado por la política",
+      "accessRevoked": "Acceso revocado",
+      "accessUnchanged": "Acceso sin cambios",
+      "accessUpgraded": "Acceso ampliado",
+      "agentConversationCleared": "Conversación del agente borrada",
+      "approvalApproved": "Aprobación aceptada",
+      "approvalCreated": "Aprobación creada",
+      "approvalExpired": "Aprobación caducada",
+      "approvalPolicyChanged": "Política de aprobación modificada",
+      "approvalRejected": "Aprobación rechazada",
+      "approvalReused": "Aprobación reutilizada",
+      "approvalStale": "Aprobación desactualizada",
+      "policyActivated": "Política activada",
+      "policyDeactivated": "Política desactivada",
+      "proposalCancelled": "Propuesta cancelada",
+      "proposalCreated": "Propuesta creada",
+      "proposalExecuted": "Propuesta ejecutada",
+      "proposalExpired": "Propuesta caducada",
+      "proposalInvalidated": "Propuesta invalidada",
+      "proposalPolicyChanged": "Política de la propuesta modificada",
+      "proposalPolicyDenied": "Propuesta denegada por la política",
+      "proposalStale": "Propuesta desactualizada"
+    },
+    "description": "Todas las acciones registradas por administradores y el agente de IA.",
+    "empty": "Todavía no hay actividad",
+    "emptyDescription": "Aquí aparecerán las acciones de administradores y del agente de IA.",
+    "loading": "Cargando el registro de auditoría...",
+    "source": {
+      "admin": "Administrador",
+      "agent": "Agente",
+      "system": "Sistema"
+    },
+    "status": {
+      "pending": "Pendiente",
+      "rejected": "Rechazado",
+      "success": "Correcto"
+    },
+    "table": {
+      "access": "Acceso",
+      "action": "Acción",
+      "date": "Fecha"
+    },
+    "title": "Registro de auditoría"
+  },
+  "policies": {
+    "anyEmployee": "Cualquier empleado",
+    "anyResource": "Cualquier recurso",
+    "catalog": {
+      "inactive-privilege-growth": {
+        "title": "Aumento de privilegios de empleados inactivos",
+        "description": "Los empleados inactivos no pueden recibir accesos nuevos ni aumentados.",
+        "rules": {
+          "privilegeGrowth": "Los empleados inactivos no pueden aumentar sus privilegios."
+        }
+      },
+      "universal-access-reduction": {
+        "title": "Reducción universal de acceso",
+        "description": "Las reducciones individuales de acceso están permitidas para empleados activos e inactivos.",
+        "rules": {
+          "downgrade": "Se permiten las reducciones individuales del nivel de acceso.",
+          "revoke": "Se permiten las revocaciones individuales de acceso."
+        }
+      },
+      "engineering-collaboration": {
+        "title": "Acceso de colaboración de Ingeniería",
+        "description": "Los desarrolladores activos pueden colaborar mediante GitHub, Jira y Staging.",
+        "rules": {
+          "collaboration": "Los desarrolladores activos pueden usar los recursos de colaboración de Ingeniería."
+        }
+      },
+      "qa-delivery": {
+        "title": "Acceso para entregas de QA",
+        "description": "Los empleados de QA activos pueden usar Jira y Staging.",
+        "rules": {
+          "delivery": "Los empleados de QA activos pueden usar los recursos de entrega."
+        }
+      },
+      "support-operations": {
+        "title": "Acceso de operaciones de Soporte",
+        "description": "Los empleados de Soporte activos pueden usar Jira y VPN dentro de los niveles definidos.",
+        "rules": {
+          "jira": "Los empleados de Soporte activos pueden trabajar en Jira.",
+          "vpnRead": "Los empleados de Soporte activos pueden recibir acceso de lectura a VPN."
+        }
+      },
+      "design-collaboration": {
+        "title": "Acceso de colaboración de Diseño",
+        "description": "Los diseñadores activos pueden leer Jira.",
+        "rules": {
+          "jiraRead": "Los diseñadores activos pueden leer Jira."
+        }
+      },
+      "product-management": {
+        "title": "Acceso de gestión de producto",
+        "description": "Los responsables de producto activos pueden administrar Jira y leer GitHub.",
+        "rules": {
+          "jira": "Los responsables de producto activos pueden administrar Jira.",
+          "githubRead": "Los responsables de producto activos pueden leer GitHub."
+        }
+      },
+      "devops-platform": {
+        "title": "Acceso de plataforma DevOps",
+        "description": "Los empleados DevOps sénior y líderes activos pueden administrar recursos de plataforma.",
+        "rules": {
+          "platform": "Los empleados DevOps sénior y líderes activos pueden usar recursos de plataforma."
+        }
+      }
+    },
+    "couldNotUpdate": "No se pudo actualizar la política",
+    "deactivated": "Política desactivada",
+    "description": "Revisa el catálogo de políticas y activa o desactiva las reglas aplicadas por el motor de políticas.",
+    "effect": {
+      "allow": "Permitir",
+      "deny": "Denegar"
+    },
+    "empty": "Todavía no hay políticas",
+    "emptyDescription": "Las políticas aparecerán cuando se inicialice el catálogo.",
+    "enforced": "aplicada por el motor de políticas",
+    "inactive": "inactiva",
+    "loading": "Cargando políticas...",
+    "noRules": "No hay reglas definidas.",
+    "operation": {
+      "revoke": "Revocar acceso",
+      "setAccessLevel": "Establecer nivel de acceso"
+    },
+    "resource": {
+      "nonSensitiveOnly": "Solo no sensibles",
+      "sensitiveOnly": "Solo sensibles"
+    },
+    "status": {
+      "active": "Activa",
+      "draft": "Borrador",
+      "superseded": "Inactiva"
+    },
+    "subject": {
+      "department": "Dpto.: {values}",
+      "level": "Nivel: {values}",
+      "role": "Rol: {values}",
+      "status": "Estado: {values}"
+    },
+    "subjectValues": {
+      "level": {
+        "lead": "Líder",
+        "senior": "Sénior"
+      },
+      "role": {
+        "designer": "Diseñador",
+        "developer": "Desarrollador",
+        "devops": "DevOps",
+        "productManager": "Responsable de producto",
+        "qa": "QA",
+        "support": "Soporte"
+      }
+    },
+    "title": "Políticas",
+    "toggleAria": "Cambiar estado de la política {title}",
+    "updatedDescription": "{title} ahora está {state}.",
+    "activated": "Política activada"
+  },
+  "learn": {
+    "concepts": {
+      "audit": {
+        "description": "Las concesiones, revocaciones, denegaciones, cambios de políticas y acciones del agente se escriben en el mismo registro de auditoría, para que siempre puedas ver quién o qué hizo algo y por qué.",
+        "title": "Todo queda auditado"
+      },
+      "policy": {
+        "description": "Cada cambio de acceso, desde la interfaz o desde el agente de IA, pasa por el mismo motor de reglas TypeScript. El agente puede proponer un cambio, pero nunca aplicar uno que el catálogo de políticas no permita.",
+        "title": "Un motor de políticas determinista decide"
+      },
+      "sensitive": {
+        "description": "Los recursos marcados como sensibles, como Producción, no pueden concederse directamente, ni siquiera por el agente. La solicitud se convierte en una aprobación y ningún permiso cambia hasta que decide un administrador.",
+        "title": "Los recursos sensibles necesitan a una persona"
+      }
+    },
+    "description": "Qué es esta demo, cómo está construida y cómo probarla.",
+    "features": {
+      "agent": "Pregunta en lenguaje natural: «¿Qué acceso tiene María a GitHub?» o «Concede a Pedro acceso de lectura a Jira». Las respuestas llegan en tiempo real y cada llamada a herramientas se muestra mientras ocurre.",
+      "approvals": "Las solicitudes de acceso a recursos sensibles que esperan decisión. Apruébalas o recházalas: el permiso no cambia hasta entonces.",
+      "audit": "El historial completo: qué se solicitó, si se concedió, denegó o envió a aprobación, y si lo hizo un administrador o el agente.",
+      "employees": "Consulta el equipo y abre cualquier empleado para ver y cambiar su acceso a cada recurso de la empresa.",
+      "overview": "Contadores en tiempo real y una lista de las acciones más recientes de todo el sistema.",
+      "permissions": "Todos los accesos activos de la organización en una tabla ordenable.",
+      "policies": "El catálogo real de reglas que aplica el motor de políticas. Desactiva una regla y observa cómo cambia de inmediato lo que el agente y la interfaz pueden hacer.",
+      "resources": "Las aplicaciones, entornos e infraestructura a los que se puede conceder acceso, incluidos los recursos marcados como sensibles."
+    },
+    "intro": "Axalot es una consola interna de IAM (gestión de identidades y accesos). Un administrador revisa o cambia a qué pueden acceder los empleados, desde la interfaz o hablando con un agente de IA en lenguaje natural. El agente puede consultar información y proponer cambios, pero un backend determinista decide qué está permitido realmente.",
+    "sections": {
+      "accessControl": "Cómo funciona aquí el control de acceso",
+      "features": "Qué puedes hacer",
+      "tech": "Cómo funciona por dentro",
+      "tryIt": "Pruébalo",
+      "tryItDescription": "Un recorrido corto que pasa por casi todo el sistema en menos de un minuto."
+    },
+    "tech": {
+      "agent": "El ciclo de herramientas del agente y el modelo de lenguaje",
+      "convex": "Base de datos, consultas, mutaciones y acciones HTTP, sin servidor backend separado",
+      "frontend": "Interfaz y estructura del panel",
+      "rag": "Búsqueda orientativa de políticas que el agente puede citar, nunca autoritativa",
+      "streaming": "Transmisión real token a token desde el agente al navegador",
+      "typescript": "De extremo a extremo, incluido el propio motor de políticas",
+      "typescriptLabel": "TypeScript, modo estricto"
+    },
+    "title": "Aprender",
+    "tryIt": {
+      "ask": {
+        "description": "«¿Qué acceso tiene María a GitHub?»: observa cómo busca al empleado y el recurso antes de responder.",
+        "title": "Haz una pregunta al agente"
+      },
+      "decide": {
+        "description": "Si pediste acceso a un recurso sensible, quedó pendiente. Ve a Aprobaciones y apruébala o recházala como administrador.",
+        "title": "Decide una aprobación"
+      },
+      "audit": {
+        "description": "Todo lo anterior ya está ahí, en orden, con quién lo hizo y por qué.",
+        "title": "Revisa el historial"
+      },
+      "policy": {
+        "description": "Desactiva la regla que permitió la solicitud anterior y vuelve a preguntar: el resultado cambia al instante.",
+        "title": "Desactiva una política"
+      },
+      "request": {
+        "description": "«Concede a Pedro acceso de lectura a Jira». Si el catálogo de políticas lo permite, se concede un acceso real.",
+        "title": "Solicita un cambio real"
+      }
+    }
+  }
+}

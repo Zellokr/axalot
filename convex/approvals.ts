@@ -1,8 +1,12 @@
 import { ConvexError, v } from 'convex/values'
-import { internalMutation, mutation, query } from './_generated/server'
+import { internalMutation, internalQuery, mutation, query } from './_generated/server'
 import { resolveDemoActor } from './domain/identity'
 import { executeApprovedTransition } from './model/permissions'
+import { getLatestApproval, listApprovals } from './model/approvals'
 import {
+  approvalValidator,
+  employeeValidator,
+  resourceValidator,
   ApprovalStatus,
   AuditSource,
   AuditStatus
@@ -11,8 +15,17 @@ import { recordAudit } from './model/audit'
 
 export const list = query({
   args: {},
-  returns: v.any(),
-  handler: async ctx => await ctx.db.query('approvals').order('desc').collect()
+  returns: v.array(approvalValidator.extend({
+    employee: v.union(v.null(), employeeValidator),
+    resource: v.union(v.null(), resourceValidator)
+  })),
+  handler: async ctx => await listApprovals(ctx)
+})
+
+export const getStatusForAgent = internalQuery({
+  args: { employeeId: v.id('employees'), resourceId: v.id('resources') },
+  returns: v.union(v.null(), approvalValidator),
+  handler: async (ctx, args) => await getLatestApproval(ctx, args.employeeId, args.resourceId)
 })
 
 export const approve = mutation({

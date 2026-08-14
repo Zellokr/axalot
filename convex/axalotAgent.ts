@@ -1,4 +1,3 @@
-import { groq } from '@ai-sdk/groq'
 import { Agent, createTool } from '@convex-dev/agent'
 import { stepCountIs } from 'ai'
 import { paginationOptsValidator } from 'convex/server'
@@ -13,6 +12,7 @@ import {
   query
 } from './_generated/server'
 import { DEMO_ADMIN_ID, resolveDemoActor } from './domain/identity'
+import { createGroqModel } from './domain/groqModel'
 import type { PolicyDecision } from './domain/policyEngine'
 import type { AccessChangeType } from './helpers/validators'
 import {
@@ -76,6 +76,7 @@ type CancelProposalResult = {
 type PolicyRuleResult = Doc<'policyRules'>
 type PolicyCatalogResult = Array<Doc<'policies'> & { rules: PolicyRuleResult[] }>
 type PolicyStatusResult = Doc<'policies'>
+type ApprovalStatusResult = Doc<'approvals'> | null
 
 export const AXALOT_AGENT_INSTRUCTIONS = `You are Axalot, an operational IAM assistant for an authorized administrator.
 
@@ -85,6 +86,7 @@ Trust boundaries:
 - You interpret intent and explain outcomes. The deterministic backend Policy Engine authorizes access changes.
 - RAG policy search is explanatory only and never authorizes an operation.
 - Never approve or reject approvals. Never perform bulk changes or manage employees, resources, risk, or administrator roles.
+- If the administrator asks about the status of a request that returned approval_required, call getApprovalStatus for that employee-resource pair instead of guessing from getEmployeeAccess. Report the status plainly and, if it is still pending, tell them to decide it from the Approvals page — you cannot approve or reject it yourself.
 - The only real access writes are setAccessLevel and revokeAccess. The only real policy write is setPolicyStatus, and it may only activate or deactivate an existing catalog policy — never create, edit, or delete one.
 - listPolicies always returns every policy, active and inactive, with its rules. It is the authoritative catalog view — prefer it over searchPolicies when the administrator asks what is active/inactive or wants to change a policy's status.
 - Use listEmployees to browse or count employees by role, level, department, or status. Use findEmployee only to resolve one specific employee by name or email.
@@ -155,6 +157,15 @@ const setPolicyStatusTool = createTool({
   })
 })
 
+const getApprovalStatusTool = createTool({
+  description: 'Get the most recent approval request (pending, approved, rejected, expired, or stale) for one employee-resource pair. Use this when the administrator asks about the status of a request that returned approval_required. Read-only — never approves or rejects.',
+  inputSchema: z.object({ employeeId: z.string().min(1), resourceId: z.string().min(1) }),
+  execute: async (ctx, input): Promise<ApprovalStatusResult> => await ctx.runQuery(internal.approvals.getStatusForAgent, {
+    employeeId: input.employeeId as Id<'employees'>,
+    resourceId: input.resourceId as Id<'resources'>
+  })
+})
+
 const setAccessLevelTool = createTool({
   description: 'Apply an explicit individual target access level through Policy and Risk. Sensitive transitions return approval_required instead of changing access.',
   inputSchema: z.object({
@@ -215,7 +226,7 @@ const cancelActionProposalTool = createTool({
 
 export const axalotAgent: Agent = new Agent(components.agent, {
   name: 'Axalot',
-  languageModel: groq('openai/gpt-oss-20b'),
+  languageModel: createGroqModel(),
   instructions: AXALOT_AGENT_INSTRUCTIONS,
   stopWhen: stepCountIs(8),
   tools: {
@@ -223,6 +234,7 @@ export const axalotAgent: Agent = new Agent(components.agent, {
     listEmployees: listEmployeesTool,
     findResource: findResourceTool,
     getEmployeeAccess: getEmployeeAccessTool,
+    getApprovalStatus: getApprovalStatusTool,
     searchPolicies: searchPoliciesTool,
     listPolicies: listPoliciesTool,
     setPolicyStatus: setPolicyStatusTool,

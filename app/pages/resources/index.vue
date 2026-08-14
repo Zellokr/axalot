@@ -1,10 +1,27 @@
 <script setup lang="ts">
 import { api } from '#convex/api'
 
+const { t } = useI18n()
 const { data: resources, status, error } = await useConvexQuery(api.resources.list, {})
 
 const search = ref('')
 const typeFilter = ref('all')
+const typeItems = computed(() => [
+  { label: t('common.status.all'), value: 'all' },
+  { label: t('common.resourceType.application'), value: 'application' },
+  { label: t('common.resourceType.environment'), value: 'environment' },
+  { label: t('common.resourceType.infrastructure'), value: 'infrastructure' }
+])
+
+function resourceTypeLabel(type: string) {
+  return ['application', 'environment', 'infrastructure'].includes(type)
+    ? t(`common.resourceType.${type}`)
+    : toLabel(type)
+}
+
+function employeeCountLabel(count: number) {
+  return t(`common.employeeCount.${count === 1 ? 'one' : 'other'}`, { count })
+}
 
 const filteredResources = computed(() => {
   return (resources.value ?? []).filter((resource) => {
@@ -24,7 +41,7 @@ function getResourceLetter(name: string) {
   <UDashboardPanel id="resources">
     <template #header>
       <UDashboardNavbar
-        title="Resources"
+        :title="t('resources.title')"
         :ui="{ root: 'border-b-0' }"
       >
         <template #leading>
@@ -34,7 +51,7 @@ function getResourceLetter(name: string) {
 
       <div class="border-b border-default px-4 pb-3 sm:px-6">
         <p class="text-sm text-muted">
-          Manage company applications, environments and infrastructure.
+          {{ t('resources.description') }}
         </p>
       </div>
     </template>
@@ -45,19 +62,14 @@ function getResourceLetter(name: string) {
           v-model="search"
           class="max-w-sm"
           icon="i-lucide-search"
-          placeholder="Filter by name..."
+          :placeholder="t('resources.filterName')"
         />
 
         <USelect
           v-model="typeFilter"
-          :items="[
-            { label: 'All', value: 'all' },
-            { label: 'Application', value: 'application' },
-            { label: 'Environment', value: 'environment' },
-            { label: 'Infrastructure', value: 'infrastructure' }
-          ]"
+          :items="typeItems"
           :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-          placeholder="Filter type"
+          :placeholder="t('resources.filterType')"
           class="min-w-36"
         />
       </div>
@@ -66,7 +78,7 @@ function getResourceLetter(name: string) {
         v-if="status === 'pending'"
         class="text-sm text-muted"
       >
-        Loading resources...
+        {{ t('resources.loading') }}
       </p>
 
       <UAlert
@@ -104,7 +116,7 @@ function getResourceLetter(name: string) {
                     </h2>
 
                     <p class="mt-1 text-sm text-muted">
-                      {{ toLabel(resource.type) }}
+                      {{ resourceTypeLabel(resource.type) }}
                     </p>
                   </div>
 
@@ -115,24 +127,24 @@ function getResourceLetter(name: string) {
                     class="gap-1.5"
                   >
                     <span class="size-1.5 rounded-full bg-warning" />
-                    Sensitive
+                    {{ t('common.resourceSensitivity.sensitive') }}
                   </UBadge>
 
                   <UBadge
                     v-else
                     color="neutral"
                     variant="subtle"
-                    label="Standard"
+                    :label="t('common.resourceSensitivity.standard')"
                   />
                 </div>
 
                 <div class="mt-5 flex items-center justify-between border-t border-default pt-4">
                   <div>
                     <p class="text-xs text-dimmed">
-                      Active permissions
+                      {{ t('resources.activePermissions') }}
                     </p>
                     <p class="mt-1 text-sm font-medium text-toned">
-                      {{ resource.permissionCount }} {{ resource.permissionCount === 1 ? 'employee' : 'employees' }}
+                      {{ employeeCountLabel(resource.permissionCount) }}
                     </p>
                   </div>
 
@@ -146,7 +158,7 @@ function getResourceLetter(name: string) {
           v-if="!filteredResources.length && resources?.length"
           class="col-span-full py-12 text-center text-muted"
         >
-          No resources found.
+          {{ t('resources.noResults') }}
         </div>
 
         <div
@@ -161,10 +173,10 @@ function getResourceLetter(name: string) {
           </div>
 
           <p class="text-sm font-medium text-highlighted">
-            No resources yet
+            {{ t('resources.empty') }}
           </p>
           <p class="mt-1 text-sm text-dimmed">
-            Company resources will appear here once they are added.
+            {{ t('resources.emptyDescription') }}
           </p>
         </div>
       </div>

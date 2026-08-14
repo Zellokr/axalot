@@ -14,6 +14,7 @@ import type * as auditLogs from "../auditLogs.js";
 import type * as axalotAgent from "../axalotAgent.js";
 import type * as dashboard from "../dashboard.js";
 import type * as domain_access from "../domain/access.js";
+import type * as domain_groqModel from "../domain/groqModel.js";
 import type * as domain_identity from "../domain/identity.js";
 import type * as domain_policyEngine from "../domain/policyEngine.js";
 import type * as employees from "../employees.js";
@@ -45,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   axalotAgent: typeof axalotAgent;
   dashboard: typeof dashboard;
   "domain/access": typeof domain_access;
+  "domain/groqModel": typeof domain_groqModel;
   "domain/identity": typeof domain_identity;
   "domain/policyEngine": typeof domain_policyEngine;
   employees: typeof employees;
