@@ -6,7 +6,7 @@ const items = computed<NavigationMenuItem[]>(() => [
   {
     label: t('navigation.home'),
     icon: 'i-lucide-home',
-    to: '/home'
+    to: '/'
   },
   {
     label: t('navigation.overview'),
