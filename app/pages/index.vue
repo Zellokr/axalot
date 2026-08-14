@@ -182,7 +182,7 @@ const statusColor = {
 
                 <div class="min-w-0 flex-1">
                   <p class="truncate text-sm font-medium text-highlighted">
-                    {{ event.action }}
+                    {{ toAuditActionLabel(event.action) }}
                   </p>
                   <p class="mt-0.5 text-xs capitalize text-dimmed">
                     {{ event.source }} · {{ event.status }}

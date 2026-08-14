@@ -138,6 +138,41 @@ export const permissionValidator = v.object({
   grantedAt: v.number()
 })
 
+export const policyValidator = v.object({
+  _id: v.id('policies'),
+  _creationTime: v.number(),
+  key: v.string(),
+  version: v.number(),
+  title: v.string(),
+  description: v.string(),
+  content: v.string(),
+  status: policyStatusValidator,
+  createdAt: v.number()
+})
+
+export const policyRuleValidator = v.object({
+  _id: v.id('policyRules'),
+  _creationTime: v.number(),
+  policyId: v.id('policies'),
+  effect: policyEffectValidator,
+  operation: accessOperationValidator,
+  changeTypes: v.optional(v.array(accessChangeTypeValidator)),
+  fromLevels: v.optional(v.array(v.union(v.null(), accessLevelValidator))),
+  targetLevels: v.optional(v.array(accessLevelValidator)),
+  subjects: v.object({
+    roles: v.optional(v.array(roleValidator)),
+    departments: v.optional(v.array(departmentValidator)),
+    levels: v.optional(v.array(levelValidator)),
+    statuses: v.optional(v.array(employeeStatusValidator))
+  }),
+  resources: v.object({
+    slugs: v.optional(v.array(v.string())),
+    types: v.optional(v.array(resourceTypeValidator)),
+    sensitive: v.optional(v.boolean())
+  }),
+  reason: v.string()
+})
+
 export const auditLogValidator = v.object({
   _id: v.id('auditLogs'),
   _creationTime: v.number(),

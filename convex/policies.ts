@@ -3,9 +3,10 @@ import { RAG } from '@convex-dev/rag'
 import { v } from 'convex/values'
 import type { Doc } from './_generated/dataModel'
 import { components, internal } from './_generated/api'
-import { action, internalAction, internalQuery, query } from './_generated/server'
-import { PolicyStatus } from './helpers/validators'
-import { getActivePolicyDocuments } from './model/policies'
+import { action, internalAction, internalMutation, internalQuery, mutation, query } from './_generated/server'
+import { resolveDemoActor } from './domain/identity'
+import { AuditSource, policyRuleValidator, policyStatusValidator, policyValidator } from './helpers/validators'
+import { getActivePolicyDocuments, listPoliciesWithRules, setPolicyStatus } from './model/policies'
 
 const POLICY_RAG_NAMESPACE = 'axalot-policies'
 
@@ -18,11 +19,38 @@ export const policyRag = new RAG(components.rag, {
 
 export const list = query({
   args: {},
-  returns: v.any(),
-  handler: async ctx => await ctx.db
-    .query('policies')
-    .withIndex('by_status', q => q.eq('status', PolicyStatus.Active))
-    .collect()
+  returns: v.array(policyValidator.extend({ rules: v.array(policyRuleValidator) })),
+  handler: async ctx => await listPoliciesWithRules(ctx)
+})
+
+export const setStatus = mutation({
+  args: {
+    policyId: v.id('policies'),
+    status: policyStatusValidator
+  },
+  returns: policyValidator,
+  handler: async (ctx, args) => {
+    const identity = resolveDemoActor(AuditSource.Admin)
+    return await setPolicyStatus(ctx, { policyId: args.policyId, status: args.status, ...identity })
+  }
+})
+
+export const listForAgent = internalQuery({
+  args: {},
+  returns: v.array(policyValidator.extend({ rules: v.array(policyRuleValidator) })),
+  handler: async ctx => await listPoliciesWithRules(ctx)
+})
+
+export const setStatusFromAgent = internalMutation({
+  args: {
+    policyId: v.id('policies'),
+    status: policyStatusValidator
+  },
+  returns: policyValidator,
+  handler: async (ctx, args) => {
+    const identity = resolveDemoActor(AuditSource.Agent)
+    return await setPolicyStatus(ctx, { policyId: args.policyId, status: args.status, ...identity })
+  }
 })
 
 export const getActiveDocuments = internalQuery({

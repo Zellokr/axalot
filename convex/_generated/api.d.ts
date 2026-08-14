@@ -18,6 +18,7 @@ import type * as domain_identity from "../domain/identity.js";
 import type * as domain_policyEngine from "../domain/policyEngine.js";
 import type * as employees from "../employees.js";
 import type * as helpers_validators from "../helpers/validators.js";
+import type * as http from "../http.js";
 import type * as model_approvals from "../model/approvals.js";
 import type * as model_audit from "../model/audit.js";
 import type * as model_auditLogs from "../model/auditLogs.js";
@@ -48,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   "domain/policyEngine": typeof domain_policyEngine;
   employees: typeof employees;
   "helpers/validators": typeof helpers_validators;
+  http: typeof http;
   "model/approvals": typeof model_approvals;
   "model/audit": typeof model_audit;
   "model/auditLogs": typeof model_auditLogs;

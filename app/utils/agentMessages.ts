@@ -6,22 +6,18 @@ export interface AgentMessageRecord {
   stepOrder: number
   status: string
   text?: string
+  error?: string
   message?: { role?: string, content?: unknown }
 }
 
-export interface AgentActivityData {
-  label: string
-  detail: string
-  loading: boolean
-}
-
-export type AgentChatMessage = UIMessage<unknown, { activity: AgentActivityData }>
-
-const TOOL_LABELS: Record<string, string> = {
+export const TOOL_LABELS: Record<string, string> = {
   findEmployee: 'Finding employee',
+  listEmployees: 'Listing employees',
   findResource: 'Finding resource',
   getEmployeeAccess: 'Reviewing current access',
   searchPolicies: 'Consulting policy catalog',
+  listPolicies: 'Reviewing policy catalog',
+  setPolicyStatus: 'Updating policy status',
   setAccessLevel: 'Applying access level',
   revokeAccess: 'Revoking access',
   createActionProposal: 'Preparing confirmation',
@@ -29,15 +25,20 @@ const TOOL_LABELS: Record<string, string> = {
   cancelActionProposal: 'Cancelling proposed change'
 }
 
-const OUTCOME_DETAILS: Record<string, string> = {
-  applied: 'Access updated',
-  unchanged: 'No change needed',
-  policy_denied: 'Blocked by policy',
-  approval_required: 'Approval requested',
-  pending_confirmation: 'Awaiting confirmation',
-  cancelled: 'Proposal cancelled',
-  expired: 'Proposal expired',
-  invalidated: 'Proposal no longer valid'
+export function toolStateLabel(state: string): string {
+  switch (state) {
+    case 'input-streaming':
+    case 'input-available':
+      return 'Working…'
+    case 'output-error':
+      return 'Action failed'
+    case 'output-denied':
+      return 'Denied'
+    case 'approval-requested':
+      return 'Awaiting approval'
+    default:
+      return 'Completed'
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -64,66 +65,92 @@ function messageText(message: AgentMessageRecord): string | undefined {
   return text || undefined
 }
 
-function toolDetail(part: Record<string, unknown>, status: string): string {
-  if (status === 'pending') return 'Working…'
-  if (status === 'failed' || part.isError === true) return 'Action failed'
+/**
+ * Converts persisted Convex agent messages into UIMessage history so useChat
+ * can hydrate a thread it never generated itself. Groups every record sharing
+ * the same `order` (one agent turn) into a single assistant UIMessage with
+ * ordered dynamic-tool + text parts, matching the shape useChat produces live.
+ */
+export function buildInitialMessages(records: readonly AgentMessageRecord[]): UIMessage[] {
+  const ordered = [...records].sort((a, b) => a.order - b.order || a.stepOrder - b.stepOrder)
+  const turns = new Map<number, AgentMessageRecord[]>()
 
-  const output = isRecord(part.output) ? part.output : undefined
-  const value = output?.type === 'json' && isRecord(output.value)
-    ? output.value
-    : isRecord(part.result) ? part.result : undefined
-  const outcome = typeof value?.status === 'string' ? value.status : undefined
-  return (outcome && OUTCOME_DETAILS[outcome]) ?? 'Completed'
-}
+  for (const record of ordered) {
+    const bucket = turns.get(record.order) ?? []
+    bucket.push(record)
+    turns.set(record.order, bucket)
+  }
 
-export function buildAgentConversation(messages: readonly AgentMessageRecord[]): AgentChatMessage[] {
-  const items: AgentChatMessage[] = []
-  const toolsByCall = new Map<string, AgentChatMessage>()
-  const ordered = [...messages].sort((a, b) => a.order - b.order || a.stepOrder - b.stepOrder)
+  const messages: UIMessage[] = []
 
-  for (const message of ordered) {
-    const role = message.message?.role
-    const text = messageText(message)
-    if ((role === 'user' || role === 'assistant') && text) {
-      items.push({
-        id: `${message._id}-text`,
-        role,
-        parts: [{ type: 'text', text }]
-      })
+  for (const [order, stepRecords] of [...turns.entries()].sort((a, b) => a[0] - b[0])) {
+    const userRecord = stepRecords.find(record => record.message?.role === 'user')
+    const assistantRecords = stepRecords.filter(record => record.message?.role !== 'user')
+
+    if (userRecord) {
+      const text = messageText(userRecord)
+      if (text) {
+        messages.push({ id: userRecord._id, role: 'user', parts: [{ type: 'text', text }] })
+      }
     }
 
-    for (const part of contentParts(message)) {
-      if ((part.type !== 'tool-call' && part.type !== 'tool-result') || typeof part.toolName !== 'string') continue
+    if (assistantRecords.length === 0) continue
 
-      const callId = typeof part.toolCallId === 'string' ? part.toolCallId : message._id
-      const existing = toolsByCall.get(callId)
-      if (existing) {
-        const activity = existing.parts[0]
-        if (activity?.type === 'data-activity') {
-          activity.data.detail = toolDetail(part, message.status)
-          activity.data.loading = message.status === 'pending'
+    const toolResultByCallId = new Map<string, Record<string, unknown>>()
+    for (const record of assistantRecords) {
+      for (const part of contentParts(record)) {
+        if (part.type === 'tool-result' && typeof part.toolCallId === 'string') {
+          toolResultByCallId.set(part.toolCallId, part)
         }
-        continue
+      }
+    }
+
+    const parts: UIMessage['parts'] = []
+    let finalText: string | undefined
+
+    for (const record of assistantRecords) {
+      for (const part of contentParts(record)) {
+        if (part.type !== 'tool-call' || typeof part.toolCallId !== 'string' || typeof part.toolName !== 'string') continue
+
+        const result = toolResultByCallId.get(part.toolCallId)
+        const rawOutput = result?.output
+        const output = isRecord(rawOutput) && rawOutput.type === 'json' ? rawOutput.value : rawOutput
+
+        parts.push((result === undefined
+          ? {
+              type: 'dynamic-tool',
+              toolName: part.toolName,
+              toolCallId: part.toolCallId,
+              state: 'output-error',
+              input: part.input ?? part.args,
+              errorText: record.error ?? 'Tool call did not complete'
+            }
+          : {
+              type: 'dynamic-tool',
+              toolName: part.toolName,
+              toolCallId: part.toolCallId,
+              state: 'output-available',
+              input: part.input ?? part.args,
+              output
+            }) as UIMessage['parts'][number])
       }
 
-      const activity: AgentChatMessage = {
-        id: `${message._id}-tool`,
-        role: 'assistant',
-        parts: [{
-          type: 'data-activity',
-          data: {
-            label: TOOL_LABELS[part.toolName] ?? 'Running secure operation',
-            detail: toolDetail(part, message.status),
-            loading: message.status === 'pending'
-          }
-        }]
+      if (record.message?.role === 'assistant') {
+        const text = messageText(record)
+        if (text) finalText = text
       }
-      toolsByCall.set(callId, activity)
-      items.push(activity)
+    }
+
+    if (finalText) {
+      parts.push({ type: 'text', text: finalText })
+    }
+
+    if (parts.length) {
+      messages.push({ id: `turn-${order}`, role: 'assistant', parts })
     }
   }
 
-  return items
+  return messages
 }
 
 export function canSendAgentPrompt(prompt: string, pending: boolean): boolean {

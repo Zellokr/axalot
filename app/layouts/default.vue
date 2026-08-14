@@ -3,6 +3,11 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 
 const items = computed<NavigationMenuItem[]>(() => [
   {
+    label: 'Learn',
+    icon: 'i-lucide-book-open',
+    to: '/learn'
+  },
+  {
     label: 'Overview',
     icon: 'i-lucide-layout-dashboard',
     to: '/'
@@ -26,6 +31,11 @@ const items = computed<NavigationMenuItem[]>(() => [
     label: 'Permissions',
     icon: 'i-lucide-shield-check',
     to: '/permissions'
+  },
+  {
+    label: 'Policies',
+    icon: 'i-lucide-gavel',
+    to: '/policies'
   },
   {
     label: 'Audit Log',

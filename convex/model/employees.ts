@@ -1,9 +1,25 @@
 import type { QueryCtx } from '../_generated/server'
+import type { Department, EmployeeStatus, Level, Role } from '../helpers/validators'
 
-export async function listEmployees(ctx: QueryCtx) {
-  return await ctx.db
-    .query('employees')
-    .collect()
+export type EmployeeFilters = {
+  role?: Role
+  level?: Level
+  department?: Department
+  status?: EmployeeStatus
+}
+
+export async function listEmployees(ctx: QueryCtx, filters: EmployeeFilters = {}) {
+  const employees = filters.department
+    ? await ctx.db
+        .query('employees')
+        .withIndex('by_department', q => q.eq('department', filters.department!))
+        .collect()
+    : await ctx.db.query('employees').collect()
+
+  return employees.filter(employee =>
+    (filters.role === undefined || employee.role === filters.role)
+    && (filters.level === undefined || employee.level === filters.level)
+    && (filters.status === undefined || employee.status === filters.status))
 }
 
 export async function getEmployeeDetails(ctx: QueryCtx, rawEmployeeId: string) {

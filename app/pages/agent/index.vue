@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import type { ChatStatus } from 'ai'
+import { useChat } from '@ai-sdk/vue'
+import { DefaultChatTransport, getToolName, isToolUIPart } from 'ai'
+import { isPartStreaming, isToolStreaming } from '@nuxt/ui/utils/ai'
 import { api } from '#convex/api'
 
 const EXAMPLE_PROMPTS = [
@@ -9,30 +11,53 @@ const EXAMPLE_PROMPTS = [
 ] as const
 
 const toast = useToast()
+const config = useRuntimeConfig()
 
 const { data: messagePage, status: messageStatus, error: messageError } = await useConvexQuery(
   api.axalotAgent.listMessages,
   { paginationOpts: { cursor: null, numItems: 100 } }
 )
-const sendMessage = useConvexAction(api.axalotAgent.sendMessage)
 const clearHistory = useConvexMutation(api.axalotAgent.clearHistory)
+
+const { messages, status, error, sendMessage, stop, regenerate, clearError } = useChat({
+  messages: buildInitialMessages(messagePage.value?.page ?? []),
+  transport: new DefaultChatTransport({
+    api: `${config.public.convex.siteUrl}/agent-chat`
+  })
+})
 
 const prompt = ref('')
 const showClearModal = ref(false)
-const isSending = computed(() => sendMessage.pending.value)
-const sendError = computed(() => sendMessage.error.value ?? undefined)
-const conversation = computed(() => buildAgentConversation(messagePage.value?.page ?? []))
+const clearingHistory = ref(false)
+const isSending = computed(() => status.value === 'submitted' || status.value === 'streaming')
 const canSubmit = computed(() => canSendAgentPrompt(prompt.value, isSending.value))
-const chatStatus = computed<ChatStatus>(() => sendError.value ? 'error' : isSending.value ? 'submitted' : 'ready')
-const submitStatus = computed<ChatStatus>(() => sendError.value ? 'error' : 'ready')
 
-function chooseExample(example: string) {
-  prompt.value = example
+const chatAnchor = useTemplateRef('chatAnchor')
+
+function scrollChatToBottom() {
+  const scrollParent = chatAnchor.value?.closest('[data-slot="body"]')
+
+  if (!(scrollParent instanceof HTMLElement)) return
+
+  scrollParent.scrollTo({ top: scrollParent.scrollHeight, behavior: 'smooth' })
+}
+
+watch(messages, () => {
+  nextTick(scrollChatToBottom)
+}, { deep: true })
+
+async function chooseExample(example: string) {
+  if (isSending.value) return
+  await sendMessage({ text: example })
 }
 
 async function confirmClearHistory() {
+  clearingHistory.value = true
+
   try {
     await clearHistory({})
+    messages.value = []
+    clearError()
     showClearModal.value = false
     toast.add({ title: 'Conversation cleared', color: 'success' })
   } catch (err) {
@@ -41,6 +66,8 @@ async function confirmClearHistory() {
       description: (err as Error).message,
       color: 'error'
     })
+  } finally {
+    clearingHistory.value = false
   }
 }
 
@@ -49,17 +76,7 @@ async function submitPrompt() {
 
   const submittedPrompt = prompt.value.trim()
   prompt.value = ''
-
-  try {
-    await sendMessage({ prompt: submittedPrompt })
-  } catch {
-    prompt.value = submittedPrompt
-  }
-}
-
-async function retryPrompt() {
-  sendMessage.reset()
-  await submitPrompt()
+  await sendMessage({ text: submittedPrompt })
 }
 </script>
 
@@ -76,7 +93,7 @@ async function retryPrompt() {
 
         <template #right>
           <UButton
-            v-if="conversation.length > 0"
+            v-if="messages.length > 0"
             icon="i-lucide-trash-2"
             color="neutral"
             variant="ghost"
@@ -84,10 +101,10 @@ async function retryPrompt() {
             @click="showClearModal = true"
           />
           <UBadge
-            :color="sendError ? 'error' : isSending ? 'info' : 'success'"
+            :color="error ? 'error' : isSending ? 'info' : 'success'"
             variant="subtle"
-            :icon="sendError ? 'i-lucide-circle-alert' : isSending ? 'i-lucide-loader-circle' : 'i-lucide-circle-check'"
-            :label="sendError ? 'Needs attention' : isSending ? 'Working' : 'Ready'"
+            :icon="error ? 'i-lucide-circle-alert' : isSending ? 'i-lucide-loader-circle' : 'i-lucide-circle-check'"
+            :label="error ? 'Needs attention' : isSending ? 'Working' : 'Ready'"
           />
         </template>
       </UDashboardNavbar>
@@ -107,7 +124,10 @@ async function retryPrompt() {
     </template>
 
     <template #body>
-      <div class="mx-auto flex min-h-full w-full max-w-3xl flex-col px-1 py-4 sm:px-4 sm:py-6">
+      <div
+        ref="chatAnchor"
+        class="mx-auto flex min-h-full w-full max-w-3xl flex-col px-1 py-4 sm:px-4 sm:py-6"
+      >
         <div
           v-if="messageStatus === 'pending'"
           class="py-3"
@@ -127,7 +147,7 @@ async function retryPrompt() {
         />
 
         <div
-          v-else-if="conversation.length === 0"
+          v-else-if="messages.length === 0"
           class="my-auto py-10 text-center"
         >
           <UIcon
@@ -157,8 +177,8 @@ async function retryPrompt() {
 
         <UChatMessages
           v-else
-          :messages="conversation"
-          :status="chatStatus"
+          :messages="messages"
+          :status="status"
           :user="{ icon: 'i-lucide-user', side: 'right', variant: 'soft' }"
           :assistant="{ icon: 'i-lucide-bot', side: 'left', variant: 'naked' }"
           should-auto-scroll
@@ -172,6 +192,7 @@ async function retryPrompt() {
               <Markdown
                 v-if="part.type === 'text' && message.role === 'assistant'"
                 :value="part.text"
+                :streaming="isPartStreaming(part)"
                 class="*:first:mt-0 *:last:mb-0"
               />
               <p
@@ -181,11 +202,10 @@ async function retryPrompt() {
                 {{ part.text }}
               </p>
               <UChatTool
-                v-else-if="part.type === 'data-activity'"
-                :text="part.data.label"
-                :suffix="part.data.detail"
-                :loading="part.data.loading"
-                :streaming="part.data.loading"
+                v-else-if="isToolUIPart(part)"
+                :text="TOOL_LABELS[getToolName(part)] ?? getToolName(part)"
+                :suffix="toolStateLabel(part.state)"
+                :streaming="isToolStreaming(part)"
                 icon="i-lucide-shield-check"
               />
             </template>
@@ -218,7 +238,7 @@ async function retryPrompt() {
           <UButton
             label="Clear"
             color="error"
-            :loading="clearHistory.pending.value"
+            :loading="clearingHistory"
             @click="confirmClearHistory"
           />
         </template>
@@ -229,18 +249,18 @@ async function retryPrompt() {
       <div class="border-t border-default bg-default/90 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
         <div class="mx-auto w-full max-w-3xl">
           <UAlert
-            v-if="sendError"
+            v-if="error"
             class="mb-3"
             color="error"
             icon="i-lucide-triangle-alert"
             title="Message not sent"
-            :description="sendError.message"
+            :description="error.message"
             role="alert"
           />
 
           <UChatPrompt
             v-model="prompt"
-            :error="sendError"
+            :error="error"
             :disabled="isSending"
             :rows="2"
             :maxrows="6"
@@ -254,10 +274,10 @@ async function retryPrompt() {
                 Enter to send · Shift+Enter for a new line
               </span>
               <UChatPromptSubmit
-                :status="submitStatus"
-                :loading="isSending"
+                :status="status"
                 :disabled="!canSubmit"
-                @reload="retryPrompt"
+                @stop="stop()"
+                @reload="regenerate()"
               />
             </template>
           </UChatPrompt>

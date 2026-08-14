@@ -1,10 +1,14 @@
-import type { GenericId } from 'convex/values'
+import { ConvexError, type GenericId } from 'convex/values'
 import type { Doc, Id } from '../_generated/dataModel'
+import { internal } from '../_generated/api'
 import type { MutationCtx, QueryCtx } from '../_generated/server'
+import type {
+  AuditSource } from '../helpers/validators'
 import {
   AccessChangeType,
   AccessLevel,
   AccessOperation,
+  AuditStatus,
   EmployeeStatus,
   Level,
   PolicyEffect,
@@ -17,6 +21,7 @@ import {
   type PolicyEvidence,
   type PolicyRuleFacts
 } from '../domain/policyEngine'
+import { recordAudit } from './audit'
 
 type PolicySeedRule = Omit<Doc<'policyRules'>, '_id' | '_creationTime' | 'policyId'>
 
@@ -262,6 +267,61 @@ export async function getActivePolicyDocuments(ctx: QueryCtx) {
     .query('policies')
     .withIndex('by_status', q => q.eq('status', PolicyStatus.Active))
     .collect()
+}
+
+export async function listPoliciesWithRules(ctx: QueryCtx) {
+  const policies = await ctx.db.query('policies').collect()
+
+  return await Promise.all(policies.map(async (policy) => {
+    const rules = await ctx.db
+      .query('policyRules')
+      .withIndex('by_policy', q => q.eq('policyId', policy._id))
+      .collect()
+
+    return { ...policy, rules }
+  }))
+}
+
+export async function setPolicyStatus(ctx: MutationCtx, args: {
+  policyId: Id<'policies'>
+  status: PolicyStatus
+  actorId: string
+  source: AuditSource
+}) {
+  const policy = await ctx.db.get(args.policyId)
+
+  if (!policy) {
+    throw new ConvexError('Policy not found')
+  }
+
+  if (policy.status === args.status) {
+    return policy
+  }
+
+  if (args.status === PolicyStatus.Active) {
+    const activeVersions = await ctx.db
+      .query('policies')
+      .withIndex('by_key_status', q => q.eq('key', policy.key).eq('status', PolicyStatus.Active))
+      .collect()
+
+    for (const activeVersion of activeVersions) {
+      await ctx.db.patch(activeVersion._id, { status: PolicyStatus.Superseded })
+    }
+  }
+
+  await ctx.db.patch(args.policyId, { status: args.status })
+
+  await recordAudit(ctx, {
+    action: args.status === PolicyStatus.Active ? 'policy_activated' : 'policy_deactivated',
+    status: AuditStatus.Success,
+    source: args.source,
+    actorId: args.actorId,
+    metadata: { policyId: args.policyId, key: policy.key, version: policy.version }
+  })
+
+  await ctx.scheduler.runAfter(0, internal.policies.syncRagCatalog, {})
+
+  return { ...policy, status: args.status }
 }
 
 export async function evaluateCurrentPolicies(ctx: QueryCtx | MutationCtx, request: {
