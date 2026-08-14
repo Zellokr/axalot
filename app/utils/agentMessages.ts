@@ -1,3 +1,5 @@
+import type { UIMessage } from 'ai'
+
 export interface AgentMessageRecord {
   _id: string
   order: number
@@ -7,14 +9,13 @@ export interface AgentMessageRecord {
   message?: { role?: string, content?: unknown }
 }
 
-export interface AgentConversationItem {
-  id: string
-  kind: 'message' | 'tool'
-  role?: 'user' | 'assistant'
-  text?: string
-  label?: string
-  detail?: string
+export interface AgentActivityData {
+  label: string
+  detail: string
+  loading: boolean
 }
+
+export type AgentChatMessage = UIMessage<unknown, { activity: AgentActivityData }>
 
 const TOOL_LABELS: Record<string, string> = {
   findEmployee: 'Finding employee',
@@ -75,9 +76,9 @@ function toolDetail(part: Record<string, unknown>, status: string): string {
   return (outcome && OUTCOME_DETAILS[outcome]) ?? 'Completed'
 }
 
-export function buildAgentConversation(messages: readonly AgentMessageRecord[]): AgentConversationItem[] {
-  const items: AgentConversationItem[] = []
-  const toolsByCall = new Map<string, AgentConversationItem>()
+export function buildAgentConversation(messages: readonly AgentMessageRecord[]): AgentChatMessage[] {
+  const items: AgentChatMessage[] = []
+  const toolsByCall = new Map<string, AgentChatMessage>()
   const ordered = [...messages].sort((a, b) => a.order - b.order || a.stepOrder - b.stepOrder)
 
   for (const message of ordered) {
@@ -86,9 +87,8 @@ export function buildAgentConversation(messages: readonly AgentMessageRecord[]):
     if ((role === 'user' || role === 'assistant') && text) {
       items.push({
         id: `${message._id}-text`,
-        kind: 'message',
         role,
-        text
+        parts: [{ type: 'text', text }]
       })
     }
 
@@ -98,15 +98,25 @@ export function buildAgentConversation(messages: readonly AgentMessageRecord[]):
       const callId = typeof part.toolCallId === 'string' ? part.toolCallId : message._id
       const existing = toolsByCall.get(callId)
       if (existing) {
-        existing.detail = toolDetail(part, message.status)
+        const activity = existing.parts[0]
+        if (activity?.type === 'data-activity') {
+          activity.data.detail = toolDetail(part, message.status)
+          activity.data.loading = message.status === 'pending'
+        }
         continue
       }
 
-      const activity: AgentConversationItem = {
+      const activity: AgentChatMessage = {
         id: `${message._id}-tool`,
-        kind: 'tool',
-        label: TOOL_LABELS[part.toolName] ?? 'Running secure operation',
-        detail: toolDetail(part, message.status)
+        role: 'assistant',
+        parts: [{
+          type: 'data-activity',
+          data: {
+            label: TOOL_LABELS[part.toolName] ?? 'Running secure operation',
+            detail: toolDetail(part, message.status),
+            loading: message.status === 'pending'
+          }
+        }]
       }
       toolsByCall.set(callId, activity)
       items.push(activity)

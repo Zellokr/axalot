@@ -1,5 +1,6 @@
 import { groq } from '@ai-sdk/groq'
 import { Agent, createTool } from '@convex-dev/agent'
+import { stepCountIs } from 'ai'
 import { paginationOptsValidator } from 'convex/server'
 import { v } from 'convex/values'
 import { z } from 'zod'
@@ -9,12 +10,14 @@ import {
   action,
   internalMutation,
   internalQuery,
+  mutation,
   query
 } from './_generated/server'
-import { DEMO_ADMIN_ID } from './domain/identity'
+import { DEMO_ADMIN_ID, resolveDemoActor } from './domain/identity'
 import type { PolicyDecision } from './domain/policyEngine'
 import type { AccessChangeType } from './helpers/validators'
-import { AccessLevel, AccessOperation } from './helpers/validators'
+import { AccessLevel, AccessOperation, AuditSource, AuditStatus } from './helpers/validators'
+import { recordAudit } from './model/audit'
 import { searchPolicyCatalog } from './policies'
 
 type EmployeeLookupResult = Doc<'employees'>[]
@@ -167,6 +170,7 @@ export const axalotAgent: Agent = new Agent(components.agent, {
   name: 'Axalot',
   languageModel: groq('openai/gpt-oss-20b'),
   instructions: AXALOT_AGENT_INSTRUCTIONS,
+  stopWhen: stepCountIs(8),
   tools: {
     findEmployee: findEmployeeTool,
     findResource: findResourceTool,
@@ -221,6 +225,34 @@ export const sendMessage = action({
     })
     const result: { text: string } = await continued.thread.generateText({ prompt: args.prompt })
     return { text: result.text }
+  }
+})
+
+export const clearHistory = mutation({
+  args: {},
+  returns: v.object({ cleared: v.boolean() }),
+  handler: async (ctx) => {
+    const conversation = await ctx.db
+      .query('agentConversations')
+      .withIndex('by_owner', q => q.eq('ownerId', DEMO_ADMIN_ID))
+      .unique()
+
+    if (!conversation) {
+      return { cleared: false }
+    }
+
+    await axalotAgent.deleteThreadAsync(ctx, { threadId: conversation.threadId })
+    await ctx.db.delete(conversation._id)
+
+    const identity = resolveDemoActor(AuditSource.Admin)
+    await recordAudit(ctx, {
+      action: 'agent_conversation_cleared',
+      status: AuditStatus.Success,
+      source: identity.source,
+      actorId: identity.actorId
+    })
+
+    return { cleared: true }
   }
 })
 

@@ -32,11 +32,15 @@ test('buildAgentConversation renders messages and friendly tool outcomes in chro
 
   const conversation = buildAgentConversation(messages)
 
-  assert.deepEqual(conversation.map(item => item.kind), ['message', 'tool', 'message'])
-  assert.equal(conversation[0]?.text, 'Give Laura admin access to Production.')
-  assert.equal(conversation[1]?.label, 'Applying access level')
-  assert.equal(conversation[1]?.detail, 'Approval requested')
-  assert.equal(conversation[2]?.text, 'An approval was created. No access changed.')
+  assert.deepEqual(conversation.map(message => message.role), ['user', 'assistant', 'assistant'])
+  assert.deepEqual(conversation.map(message => message.parts), [
+    [{ type: 'text', text: 'Give Laura admin access to Production.' }],
+    [{
+      type: 'data-activity',
+      data: { label: 'Applying access level', detail: 'Approval requested', loading: false }
+    }],
+    [{ type: 'text', text: 'An approval was created. No access changed.' }]
+  ])
   assert.doesNotMatch(JSON.stringify(conversation), /opaque-/)
 })
 
@@ -44,6 +48,24 @@ test('canSendAgentPrompt rejects blank prompts and duplicate sends', () => {
   assert.equal(canSendAgentPrompt('  ', false), false)
   assert.equal(canSendAgentPrompt('Inspect María access', true), false)
   assert.equal(canSendAgentPrompt('Inspect María access', false), true)
+})
+
+test('Agent renders assistant Markdown while keeping user messages literal', async () => {
+  const page = await readFile(new URL('../../app/pages/agent/index.vue', import.meta.url), 'utf8')
+  const messages = page.match(/<UChatMessages[\s\S]*?<\/UChatMessages>/)?.[0] ?? ''
+
+  assert.match(messages, /<Markdown[\s\S]*message\.role === 'assistant'[\s\S]*:value="part\.text"/)
+  assert.doesNotMatch(messages, /<Comark|:markdown=/)
+  assert.match(messages, /<p[\s\S]*message\.role === 'user'[\s\S]*whitespace-pre-wrap[\s\S]*{{ part\.text }}[\s\S]*<\/p>/)
+})
+
+test('Agent page delegates chat presentation to the Nuxt UI Chat family', async () => {
+  const page = await readFile(new URL('../../app/pages/agent/index.vue', import.meta.url), 'utf8')
+
+  for (const component of ['UChatMessages', 'UChatTool', 'UChatPrompt', 'UChatPromptSubmit', 'UChatShimmer']) {
+    assert.match(page, new RegExp(`<${component}`))
+  }
+  assert.doesNotMatch(page, /<ol|<article|<UTextarea|<UChatReasoning/)
 })
 
 test('Agent page uses only the server-owned conversation contract', async () => {

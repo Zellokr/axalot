@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ChatStatus } from 'ai'
 import { api } from '#convex/api'
 
 const EXAMPLE_PROMPTS = [
@@ -7,20 +8,40 @@ const EXAMPLE_PROMPTS = [
   'Give María read access to Jira.'
 ] as const
 
+const toast = useToast()
+
 const { data: messagePage, status: messageStatus, error: messageError } = await useConvexQuery(
   api.axalotAgent.listMessages,
   { paginationOpts: { cursor: null, numItems: 100 } }
 )
 const sendMessage = useConvexAction(api.axalotAgent.sendMessage)
+const clearHistory = useConvexMutation(api.axalotAgent.clearHistory)
 
 const prompt = ref('')
-const messageEnd = useTemplateRef<HTMLElement>('messageEnd')
+const showClearModal = ref(false)
 const isSending = computed(() => sendMessage.pending.value)
+const sendError = computed(() => sendMessage.error.value ?? undefined)
 const conversation = computed(() => buildAgentConversation(messagePage.value?.page ?? []))
 const canSubmit = computed(() => canSendAgentPrompt(prompt.value, isSending.value))
+const chatStatus = computed<ChatStatus>(() => sendError.value ? 'error' : isSending.value ? 'submitted' : 'ready')
+const submitStatus = computed<ChatStatus>(() => sendError.value ? 'error' : 'ready')
 
 function chooseExample(example: string) {
   prompt.value = example
+}
+
+async function confirmClearHistory() {
+  try {
+    await clearHistory({})
+    showClearModal.value = false
+    toast.add({ title: 'Conversation cleared', color: 'success' })
+  } catch (err) {
+    toast.add({
+      title: 'Could not clear conversation',
+      description: (err as Error).message,
+      color: 'error'
+    })
+  }
 }
 
 async function submitPrompt() {
@@ -36,13 +57,10 @@ async function submitPrompt() {
   }
 }
 
-watch(
-  [() => conversation.value.length, isSending],
-  async () => {
-    await nextTick()
-    messageEnd.value?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }
-)
+async function retryPrompt() {
+  sendMessage.reset()
+  await submitPrompt()
+}
 </script>
 
 <template>
@@ -57,11 +75,19 @@ watch(
         </template>
 
         <template #right>
+          <UButton
+            v-if="conversation.length > 0"
+            icon="i-lucide-trash-2"
+            color="neutral"
+            variant="ghost"
+            aria-label="Clear conversation"
+            @click="showClearModal = true"
+          />
           <UBadge
-            :color="isSending ? 'info' : 'success'"
+            :color="sendError ? 'error' : isSending ? 'info' : 'success'"
             variant="subtle"
-            :icon="isSending ? 'i-lucide-loader-circle' : 'i-lucide-circle-check'"
-            :label="isSending ? 'Working' : 'Ready'"
+            :icon="sendError ? 'i-lucide-circle-alert' : isSending ? 'i-lucide-loader-circle' : 'i-lucide-circle-check'"
+            :label="sendError ? 'Needs attention' : isSending ? 'Working' : 'Ready'"
           />
         </template>
       </UDashboardNavbar>
@@ -84,9 +110,12 @@ watch(
       <div class="mx-auto flex min-h-full w-full max-w-3xl flex-col px-1 py-4 sm:px-4 sm:py-6">
         <div
           v-if="messageStatus === 'pending'"
+          class="py-3"
           aria-label="Loading conversation"
+          role="status"
+          aria-live="polite"
         >
-          <USkeleton class="h-20 w-3/4 rounded-lg" />
+          <UChatShimmer text="Loading conversation…" />
         </div>
 
         <UAlert
@@ -126,106 +155,112 @@ watch(
           </div>
         </div>
 
-        <ol
+        <UChatMessages
           v-else
-          class="space-y-5"
+          :messages="conversation"
+          :status="chatStatus"
+          :user="{ icon: 'i-lucide-user', side: 'right', variant: 'soft' }"
+          :assistant="{ icon: 'i-lucide-bot', side: 'left', variant: 'naked' }"
+          should-auto-scroll
           aria-label="Conversation with Axalot"
         >
-          <li
-            v-for="item in conversation"
-            :key="item.id"
-          >
-            <article
-              v-if="item.kind === 'message'"
-              class="max-w-[85%]"
-              :class="item.role === 'user' ? 'ml-auto' : ''"
+          <template #content="{ message }">
+            <template
+              v-for="(part, index) in message.parts"
+              :key="`${message.id}-${part.type}-${index}`"
             >
-              <p class="mb-1 text-xs font-medium text-muted">
-                {{ item.role === 'user' ? 'You' : 'Axalot' }}
-              </p>
-              <p
-                class="whitespace-pre-wrap break-words rounded-lg px-4 py-3 text-sm leading-6 shadow-xs"
-                :class="item.role === 'user'
-                  ? 'bg-inverted text-inverted'
-                  : 'border border-default bg-elevated text-default'"
-              >
-                {{ item.text }}
-              </p>
-            </article>
-
-            <div
-              v-else
-              class="ml-11 flex items-center gap-2 text-xs text-muted"
-            >
-              <UIcon
-                name="i-lucide-shield-check"
-                class="size-4 shrink-0 text-info"
+              <Markdown
+                v-if="part.type === 'text' && message.role === 'assistant'"
+                :value="part.text"
+                class="*:first:mt-0 *:last:mb-0"
               />
-              <span class="font-medium text-default">{{ item.label }}</span>
-              <span aria-hidden="true">·</span>
-              <span>{{ item.detail }}</span>
-            </div>
-          </li>
-        </ol>
+              <p
+                v-else-if="part.type === 'text' && message.role === 'user'"
+                class="whitespace-pre-wrap"
+              >
+                {{ part.text }}
+              </p>
+              <UChatTool
+                v-else-if="part.type === 'data-activity'"
+                :text="part.data.label"
+                :suffix="part.data.detail"
+                :loading="part.data.loading"
+                :streaming="part.data.loading"
+                icon="i-lucide-shield-check"
+              />
+            </template>
+          </template>
 
-        <div
-          v-if="isSending"
-          class="mt-5 flex items-center gap-3 text-sm text-muted"
-          role="status"
-          aria-live="polite"
-        >
-          <UIcon
-            name="i-lucide-loader-circle"
-            class="size-4 animate-spin text-info"
-          />
-          Axalot is checking context, policy, and risk…
-        </div>
-
-        <div ref="messageEnd" />
+          <template #indicator>
+            <UChatShimmer
+              text="Axalot is checking context, policy, and risk…"
+              role="status"
+              aria-live="polite"
+            />
+          </template>
+        </UChatMessages>
       </div>
+
+      <UModal
+        :open="showClearModal"
+        title="Clear conversation"
+        description="This permanently deletes the conversation history with Axalot. This action cannot be undone."
+        :ui="{ footer: 'justify-end' }"
+        @update:open="(value) => { if (!value) showClearModal = false }"
+      >
+        <template #footer>
+          <UButton
+            label="Cancel"
+            color="neutral"
+            variant="outline"
+            @click="showClearModal = false"
+          />
+          <UButton
+            label="Clear"
+            color="error"
+            :loading="clearHistory.pending.value"
+            @click="confirmClearHistory"
+          />
+        </template>
+      </UModal>
     </template>
 
     <template #footer>
       <div class="border-t border-default bg-default/90 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
         <div class="mx-auto w-full max-w-3xl">
           <UAlert
-            v-if="sendMessage.error.value"
+            v-if="sendError"
             class="mb-3"
             color="error"
             icon="i-lucide-triangle-alert"
             title="Message not sent"
-            :description="sendMessage.error.value.message"
+            :description="sendError.message"
+            role="alert"
           />
 
-          <form
-            class="relative"
-            @submit.prevent="submitPrompt"
+          <UChatPrompt
+            v-model="prompt"
+            :error="sendError"
+            :disabled="isSending"
+            :rows="2"
+            :maxrows="6"
+            aria-label="Message Axalot"
+            placeholder="Ask about access or request an individual change…"
+            class="w-full"
+            @submit="submitPrompt"
           >
-            <UTextarea
-              v-model="prompt"
-              autoresize
-              :rows="2"
-              :maxrows="6"
-              :disabled="isSending"
-              aria-label="Message Axalot"
-              placeholder="Ask about access or request an individual change…"
-              class="w-full"
-              :ui="{ base: 'pe-14' }"
-              @keydown.enter.exact.prevent="submitPrompt"
-            />
-            <UButton
-              type="submit"
-              icon="i-lucide-arrow-up"
-              :loading="isSending"
-              :disabled="!canSubmit"
-              aria-label="Send message"
-              class="absolute bottom-2 right-2"
-            />
-          </form>
-
-          <p class="mt-2 text-center text-xs text-dimmed">
-            Enter to send · Shift+Enter for a new line
-          </p>
+            <template #footer>
+              <span class="text-xs text-dimmed">
+                Enter to send · Shift+Enter for a new line
+              </span>
+              <UChatPromptSubmit
+                :status="submitStatus"
+                :loading="isSending"
+                :disabled="!canSubmit"
+                @reload="retryPrompt"
+              />
+            </template>
+          </UChatPrompt>
         </div>
       </div>
     </template>
