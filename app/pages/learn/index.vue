@@ -21,7 +21,7 @@ const CONCEPTS = computed(() => [
 
 const FEATURES = computed(() => [
   {
-    to: '/',
+    to: '/overview',
     icon: 'i-lucide-layout-dashboard',
     title: t('navigation.overview'),
     description: t('learn.features.overview')

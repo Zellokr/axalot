@@ -11,7 +11,7 @@ const items = computed<NavigationMenuItem[]>(() => [
   {
     label: t('navigation.overview'),
     icon: 'i-lucide-layout-dashboard',
-    to: '/'
+    to: '/overview'
   },
   {
     label: t('navigation.employees'),
