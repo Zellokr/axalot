@@ -1,8 +1,14 @@
-# OpsPilot
+# Axalot
 
 Consola interna de gestión de accesos (IAM) con un agente de IA. Un administrador consulta o cambia permisos de empleados sobre recursos de la empresa, por interfaz o en lenguaje natural.
 
 El LLM propone. El backend decide.
+
+## Sin autenticación (todavía)
+
+Esta demo **no tiene login**. Todas las mutations corren como un único actor fijo (`demo-admin`, ver `convex/domain/identity.ts`) — no hay usuarios, sesiones ni permisos por rol. Cualquiera con la URL desplegada tiene control admin completo: puede conceder o revocar accesos reales, aprobar o rechazar solicitudes, activar/desactivar políticas y usar el agente para ejecutar cambios reales.
+
+Vale para correrla en local o compartirla en corto con protección adicional (por ejemplo, Password Protection de Vercel). No la despliegues públicamente sin cerrar el acceso primero.
 
 ## Qué hace
 
@@ -24,7 +30,6 @@ El agente nunca inventa IDs, nunca aprueba solicitudes y nunca salta la polític
 | Chat | `@ai-sdk/vue`, `@comark/nuxt` |
 | Backend | Convex (`queries`, `mutations`, `actions`, HTTP Actions) |
 | Bridge | `better-convex-nuxt` |
-| Auth | Better Auth + `@convex-dev/better-auth` |
 | Agente | `@convex-dev/agent`, Groq `openai/gpt-oss-20b` |
 | RAG | `@convex-dev/rag`, embeddings Gemini `gemini-embedding-001` |
 | Validación | Zod 4 |
@@ -62,18 +67,18 @@ pnpm dev
 
 La app queda en `http://localhost:3000`.
 
-### Auth en Convex
-
-`SITE_URL` es el origen de **Nuxt**, no `*.convex.site`.
+### Variables de entorno en Convex
 
 ```bash
-pnpm exec convex env set SITE_URL http://localhost:3000
-pnpm exec convex env set BETTER_AUTH_SECRET "$(openssl rand -base64 32)"
 pnpm exec convex env set GROQ_API_KEY "…"
 pnpm exec convex env set GOOGLE_GENERATIVE_AI_API_KEY "…"
 ```
 
-`BETTER_AUTH_SECRET` necesita al menos 32 caracteres.
+Opcional: `GROQ_API_KEYS` (varias keys separadas por coma, idealmente de cuentas de Groq distintas) para que el agente rote a la siguiente si una se queda sin cupo diario. El cupo TPD es por organización, no por key — rotar keys de la misma cuenta no evita el rate limit.
+
+```bash
+pnpm exec convex env set GROQ_API_KEYS "key_cuenta_1,key_cuenta_2"
+```
 
 ### Datos de ejemplo
 
@@ -91,7 +96,7 @@ pnpm exec convex run policyRag:seed
 | `pnpm build` | Build de producción |
 | `pnpm preview` | Sirve el build |
 
-Auth necesita un host con Nitro. No despliegues esto como sitio estático (`nuxt generate`).
+Necesita un host con Nitro (Node, Vercel, etc.). No lo despliegues como sitio estático (`nuxt generate`).
 
 ## Variables
 
@@ -99,33 +104,33 @@ Auth necesita un host con Nitro. No despliegues esto como sitio estático (`nuxt
 |-------|----------|-----|
 | Nuxt | `NUXT_PUBLIC_CONVEX_URL` / `CONVEX_URL` | Deployment `.convex.cloud` |
 | Nuxt | `NUXT_PUBLIC_CONVEX_SITE_URL` / `CONVEX_SITE_URL` | HTTP Actions `.convex.site` |
-| Convex | `SITE_URL` | Origen exacto de la app (`http://localhost:3000`) |
-| Convex | `BETTER_AUTH_SECRET` | Firma de sesión |
 | Convex | `GROQ_API_KEY` | Modelo del agente |
+| Convex | `GROQ_API_KEYS` (opcional) | Rotación de keys si una se queda sin cupo |
 | Convex | `GOOGLE_GENERATIVE_AI_API_KEY` | Embeddings RAG |
 
 ## Cómo está organizado
 
 ```text
 app/          UI Nuxt (pages, layout, componentes)
-convex/       Schema, auth, IAM, agente, RAG, HTTP
-docs/         Guía de réplica desde cero
+convex/       Schema, IAM, agente, RAG, HTTP
 ```
 
-Páginas: Overview, Agent, Employees, Resources, Policies, Approvals, Audit, Auth.
+Páginas: Home, Overview, Employees, Agent, Resources, Permissions, Approvals, Policies, Audit Log, Learn.
 
 ## Flujo de un grant
 
 ```text
 UI o chat
   → (agente) findEmployee / findResource / getEmployeeAccess / searchPolicies
-  → permissions.grantAccess
-       → ¿empleado activo?
-       → evaluateGrantPolicy          # siempre, determinista
-            no  → policy_denied + audit
-            sí + sensitive → approval (el permiso NO cambia)
-            sí + no sensitive → escribe permissions + audit
+  → permissions.setAccessLevel / setAccessLevelFromAgent
+       → runSetAccessLevel
+            → evaluateCurrentPolicies     # siempre, determinista (domain/policyEngine.ts)
+                 deny  → access_policy_denied + audit
+                 allow + recurso sensible → approval (el permiso NO cambia)
+                 allow + recurso estándar → escribe permissions + audit
 ```
 
-RAG puede aconsejar al modelo. Si el modelo se equivoca, el motor en `convex/accessPolicy.ts` sigue bloqueando.
+Aprobar/rechazar una `approval` pendiente solo se puede desde la página **Approvals** — el agente puede consultar su estado (`getApprovalStatus`) pero nunca decidirla.
+
+RAG puede aconsejar al modelo. Si el modelo se equivoca, el motor en `convex/domain/policyEngine.ts` sigue bloqueando.
 

@@ -93,7 +93,7 @@
       "auditDescription": "Acciones registradas recientemente",
       "auditEvents": "Eventos de auditoría",
       "employees": "Empleados",
-      "employeesDescription": "Personas gestionadas por OpsPilot",
+      "employeesDescription": "Personas gestionadas por Axalot",
       "permissions": "Permisos",
       "permissionsDescription": "Accesos activos a recursos",
       "resources": "Recursos",
@@ -102,7 +102,7 @@
     "description": "Supervisa empleados, recursos y accesos de tu organización.",
     "error": "No se pudo cargar el resumen.",
     "quickActions": {
-      "agent": "Preguntar a OpsPilot",
+      "agent": "Preguntar a Axalot",
       "agentDescription": "Gestiona accesos mediante IA",
       "description": "Tareas de administración habituales",
       "employees": "Empleados",
@@ -112,7 +112,7 @@
       "title": "Acciones rápidas"
     },
     "recent": {
-      "description": "Últimas acciones de OpsPilot",
+      "description": "Últimas acciones de Axalot",
       "empty": "Todavía no hay actividad",
       "emptyDescription": "Aquí aparecerán las acciones de administradores y del agente de IA.",
       "title": "Actividad reciente",

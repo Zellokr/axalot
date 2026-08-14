@@ -93,7 +93,7 @@
       "auditDescription": "Recent recorded actions",
       "auditEvents": "Audit events",
       "employees": "Employees",
-      "employeesDescription": "People managed by OpsPilot",
+      "employeesDescription": "People managed by Axalot",
       "permissions": "Permissions",
       "permissionsDescription": "Active resource grants",
       "resources": "Resources",
@@ -102,7 +102,7 @@
     "description": "Monitor employees, resources and access across your organization.",
     "error": "Could not load the overview.",
     "quickActions": {
-      "agent": "Ask OpsPilot",
+      "agent": "Ask Axalot",
       "agentDescription": "Manage access using AI",
       "description": "Common administration tasks",
       "employees": "Employees",
@@ -112,7 +112,7 @@
       "title": "Quick actions"
     },
     "recent": {
-      "description": "Latest actions across OpsPilot",
+      "description": "Latest actions across Axalot",
       "empty": "No activity yet",
       "emptyDescription": "Actions performed by administrators and the AI agent will appear here.",
       "title": "Recent activity",
